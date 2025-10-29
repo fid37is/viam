@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '@/components/providers/theme-provider'
+import Image from 'next/image'
 
 export default function HomeNav() {
   const { theme, toggleTheme } = useTheme()
@@ -11,8 +12,15 @@ export default function HomeNav() {
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">TraceAm</span>
+          <Link href="/" className="flex items-center space-x-[-12px]">
+            <Image 
+              src="/trailam-logo.svg" 
+              alt="TrailAm Logo" 
+              width={50} 
+              height={50}
+              className="w-40 h-60 pt-8"
+            />
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">TrailAm</span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">

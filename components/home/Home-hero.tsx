@@ -18,25 +18,18 @@ export default function HomeHero() {
             <AuthSection />
           </div>
 
-          {/* Right Side - Illustration */}
+          {/* Right Side - Image Placeholder */}
           <div className="order-1 lg:order-2">
             <div className="relative w-full max-w-8xl mx-auto h-[600px] lg:h-[700px]">
-              {/* Right Side - Video Animation */}
               <div className="relative w-full h-full">
-                <video
-                  src="/hero-animation.mp4"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full rounded-3xl object-cover border-2 border-gray-200"
-                >
-                  Your browser does not support the video tag.
-                </video>
+                <img
+                  src="/hero-image.png"
+                  alt="TrailAm Dashboard Preview"
+                  className="w-full h-full rounded-3xl object-cover"
+                />
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -48,7 +41,7 @@ export default function HomeHero() {
               Everything you need to succeed
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Track, analyze, and land your perfect role
+              Track, analyze, and land your perfect role with powerful tools designed for modern job seekers
             </p>
           </div>
 
@@ -56,37 +49,37 @@ export default function HomeHero() {
             <FeatureCard
               icon={<Target className="w-8 h-8" />}
               title="Smart Matching"
-              description="AI-powered insights help you discover which companies align with your values and career goals."
+              description="AI-powered insights analyze company culture, values, and growth trajectory to help you discover roles that truly align with your career goals and aspirations."
               color="primary"
             />
             <FeatureCard
               icon={<BarChart3 className="w-8 h-8" />}
               title="Organized Tracking"
-              description="Keep all your applications, notes, and research in one beautiful dashboard."
+              description="Centralize all your applications, interview notes, contacts, and research in one intuitive dashboard that grows with your job search journey."
               color="accent"
             />
             <FeatureCard
               icon={<Bell className="w-8 h-8" />}
               title="Never Miss Out"
-              description="Get reminded about follow-ups, interviews, and important deadlines."
+              description="Smart reminders keep you on track with follow-ups, interview prep, thank-you notes, and application deadlines so opportunities never slip through."
               color="secondary"
             />
             <FeatureCard
               icon={<Search className="w-8 h-8" />}
               title="Company Insights"
-              description="Automatic research and analysis of every company you apply to."
+              description="Get instant access to funding rounds, team size, tech stack, recent news, and culture reviews for every company you're considering."
               color="primary"
             />
             <FeatureCard
               icon={<TrendingUp className="w-8 h-8" />}
               title="Track Progress"
-              description="Visualize your job search journey with detailed analytics and insights."
+              description="Visualize your application-to-interview conversion rates, identify successful strategies, and optimize your approach with detailed analytics."
               color="accent"
             />
             <FeatureCard
               icon={<Zap className="w-8 h-8" />}
               title="Lightning Fast"
-              description="Add applications in seconds with smart link parsing and auto-fill."
+              description="Add applications in seconds with smart job posting parsers that automatically extract company details, role info, and requirements."
               color="secondary"
             />
           </div>
@@ -101,23 +94,23 @@ export default function HomeHero() {
               Loved by job seekers
             </h2>
             <p className="text-xl text-gray-600">
-              See what people are saying about TraceAm
+              Join thousands who transformed their job search with TrailAm
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <TestimonialCard
-              quote="TraceAm helped me organize 50+ applications and land my dream role. The AI matching feature is incredible!"
+              quote="TrailAm helped me organize 50+ applications and land my dream role at a Series B startup. The AI matching feature showed me companies I never would have discovered on my own!"
               author="Sarah M."
               role="Software Engineer"
             />
             <TestimonialCard
-              quote="Finally, a tool that understands what I'm looking for. The company insights saved me hours of research."
+              quote="Finally, a tool that understands what I'm looking for in company culture and growth stage. The automated company research saved me literally hours every week."
               author="James K."
               role="Product Manager"
             />
             <TestimonialCard
-              quote="I never missed a follow-up again. TraceAm's reminders helped me stay on top of every opportunity."
+              quote="I went from scattered spreadsheets to a streamlined process. Never missed a follow-up again and my response rate doubled. This tool paid for itself 10x over."
               author="Emily R."
               role="Marketing Lead"
             />
@@ -132,7 +125,7 @@ export default function HomeHero() {
             Ready to find your way?
           </h2>
           <p className="text-xl text-gray-800 mb-8">
-            Join thousands of job seekers who found their perfect role with TraceAm
+            Join thousands of job seekers who found their perfect role with TrailAm
           </p>
           <button
             onClick={() => {
@@ -150,7 +143,7 @@ export default function HomeHero() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold mb-4">TraceAm</h3>
+              <h3 className="text-2xl font-bold mb-4">TrailAm</h3>
               <p className="text-gray-400">
                 Find your way to the perfect role
               </p>
@@ -181,7 +174,7 @@ export default function HomeHero() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 TraceAm. All rights reserved.</p>
+            <p>&copy; 2025 TrailAm. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1,0 +1,27 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simple path/trail design -->
+  <defs>
+    <linearGradient id="trailGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Trail path with dots representing journey/progress -->
+  <circle cx="50" cy="100" r="8" fill="url(#trailGradient)" opacity="0.4"/>
+  <circle cx="80" cy="80" r="8" fill="url(#trailGradient)" opacity="0.6"/>
+  <circle cx="110" cy="90" r="8" fill="url(#trailGradient)" opacity="0.8"/>
+  <circle cx="140" cy="70" r="10" fill="url(#trailGradient)"/>
+  
+  <!-- Connecting curved path -->
+  <path d="M 50 100 Q 65 90, 80 80 T 110 90 T 140 70" 
+        stroke="url(#trailGradient)" 
+        stroke-width="3" 
+        fill="none" 
+        stroke-linecap="round"
+        opacity="0.5"/>
+  
+  <!-- Target/destination symbol -->
+  <circle cx="140" cy="70" r="15" stroke="url(#trailGradient)" stroke-width="2" fill="none"/>
+  <circle cx="140" cy="70" r="20" stroke="url(#trailGradient)" stroke-width="1.5" fill="none" opacity="0.4"/>
+</svg>

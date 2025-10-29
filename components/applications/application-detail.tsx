@@ -227,7 +227,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
               <div className="flex gap-3">
                 <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: '#00e0ff' }} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Added to TraceAm</p>
+                  <p className="text-sm font-medium text-gray-900">Added to TrailAm</p>
                   <p className="text-xs text-gray-500">{formatDate(application.created_at)}</p>
                 </div>
               </div>

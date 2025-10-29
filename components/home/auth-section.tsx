@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,10 +9,11 @@ import { Label } from '@/components/ui/label'
 import { Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
-type AuthStep = 'email' | 'password' | 'verify' | 'forgot-password' | 'forgot-password-sent' | 'reset-password'
+type AuthStep = 'email' | 'create-password' | 'password' | 'verify' | 'forgot-password' | 'forgot-password-sent' | 'reset-password'
 
 export default function AuthSection() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   
   const [step, setStep] = useState<AuthStep>('email')
@@ -22,19 +23,38 @@ export default function AuthSection() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isNewUser, setIsNewUser] = useState(false)
 
-  // Check if user came from password reset email link
+  // Check for errors or recovery type in URL
   useEffect(() => {
-    const checkResetToken = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const type = hashParams.get('type')
-      
-      if (type === 'recovery') {
-        setStep('reset-password')
+    const error = searchParams.get('error')
+    const type = searchParams.get('type')
+    
+    if (error) {
+      const errorMessages: Record<string, string> = {
+        'auth_failed': 'Authentication failed. Please try again.',
+        'verification_failed': 'Email verification failed. Please try again.',
+        'no_token': 'Invalid verification link.',
       }
+      toast.error(errorMessages[error] || 'An error occurred', {
+        style: { color: '#dc2626' }
+      })
     }
     
-    checkResetToken()
+    if (type === 'recovery') {
+      setStep('reset-password')
+    }
+  }, [searchParams])
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user && step !== 'reset-password') {
+        router.push('/dashboard')
+      }
+    }
+    checkUser()
   }, [])
 
   const handleGoogleSignIn = async () => {
@@ -65,40 +85,98 @@ export default function AuthSection() {
       return
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address', {
+        style: { color: '#dc2626' }
+      })
+      return
+    }
+
     setLoading(true)
 
     try {
+      // Check if user exists by attempting sign-in with impossible password
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        password: '___impossible_password_123___',
+        password: '___impossible_password_check_123___',
       })
 
       if (signInError) {
-        if (signInError.message.includes('Invalid login credentials') || 
-            signInError.message.includes('Email not confirmed')) {
-          const { error: signUpError } = await supabase.auth.signUp({
-            email,
-            password: Math.random().toString(36).slice(-12),
-            options: {
-              emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
+        if (signInError.message.includes('Invalid login credentials')) {
+          // User exists - go to password step
+          setIsNewUser(false)
+          setStep('password')
+        } else if (signInError.message.includes('Email not confirmed')) {
+          // User exists but hasn't verified email
+          toast.error('Please verify your email first. Check your inbox for the verification link.', {
+            style: { color: '#dc2626' }
           })
-
-          if (signUpError) {
-            if (signUpError.message.includes('User already registered') ||
-                signUpError.message.includes('already registered')) {
-              setStep('password')
-            } else {
-              throw signUpError
-            }
-          } else {
-            setStep('verify')
-          }
         } else {
-          throw signInError
+          // New user - go to create password step
+          setIsNewUser(true)
+          setStep('create-password')
         }
       } else {
+        // Somehow authenticated (shouldn't happen with impossible password)
+        setIsNewUser(false)
         setStep('password')
+      }
+    } catch (err: any) {
+      toast.error(err.message, {
+        style: { color: '#dc2626' }
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateAccount = async () => {
+    if (!password) {
+      toast.error('Please enter a password', {
+        style: { color: '#dc2626' }
+      })
+      return
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters', {
+        style: { color: '#dc2626' }
+      })
+      return
+    }
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match', {
+        style: { color: '#dc2626' }
+      })
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          toast.error('This email is already registered. Please sign in instead.', {
+            style: { color: '#dc2626' }
+          })
+          setIsNewUser(false)
+          setStep('password')
+        } else {
+          throw error
+        }
+      } else {
+        setStep('verify')
       }
     } catch (err: any) {
       toast.error(err.message, {
@@ -133,6 +211,13 @@ export default function AuthSection() {
           setLoading(false)
           return
         }
+        if (error.message.includes('Email not confirmed')) {
+          toast.error('Please verify your email first. Check your inbox for the verification link.', {
+            style: { color: '#dc2626' }
+          })
+          setLoading(false)
+          return
+        }
         throw error
       }
 
@@ -162,7 +247,7 @@ export default function AuthSection() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       })
 
       if (error) throw error
@@ -226,6 +311,8 @@ export default function AuthSection() {
   const goBackToEmail = () => {
     setStep('email')
     setPassword('')
+    setConfirmPassword('')
+    setIsNewUser(false)
   }
 
   const goBackToPassword = () => {
@@ -240,17 +327,19 @@ export default function AuthSection() {
   const getHeaderText = () => {
     switch (step) {
       case 'verify':
-        return { title: 'TraceAm', subtitle: 'Check your email' }
+        return { title: 'TrailAm', subtitle: 'Check your email' }
+      case 'create-password':
+        return { title: 'TrailAm', subtitle: 'Create your account' }
       case 'password':
-        return { title: 'TraceAm', subtitle: 'Welcome back' }
+        return { title: 'TrailAm', subtitle: 'Welcome back' }
       case 'forgot-password':
-        return { title: 'TraceAm', subtitle: 'Reset your password' }
+        return { title: 'TrailAm', subtitle: 'Reset your password' }
       case 'forgot-password-sent':
-        return { title: 'TraceAm', subtitle: 'Check your email' }
+        return { title: 'TrailAm', subtitle: 'Check your email' }
       case 'reset-password':
-        return { title: 'TraceAm', subtitle: 'Set new password' }
+        return { title: 'TrailAm', subtitle: 'Set new password' }
       default:
-        return { title: 'TraceAm', subtitle: 'Find your way' }
+        return { title: 'TrailAm', subtitle: 'Find your way' }
     }
   }
 
@@ -261,9 +350,9 @@ export default function AuthSection() {
       {/* Header with back button */}
       <div className="mb-8">
         <div className="flex items-center justify-center relative">
-          {(step === 'password' || step === 'forgot-password') && (
+          {(step === 'password' || step === 'create-password' || step === 'forgot-password') && (
             <button
-              onClick={step === 'password' ? goBackToEmail : goBackToPassword}
+              onClick={step === 'forgot-password' ? goBackToPassword : goBackToEmail}
               className="absolute left-0 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full transition-colors"
               aria-label="Go back"
             >
@@ -288,8 +377,15 @@ export default function AuthSection() {
               <p className="font-semibold text-gray-900 dark:text-white mt-1">{email}</p>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Click the link in your email to complete your registration
+              Click the link in your email to complete your registration and sign in
             </p>
+            <button
+              onClick={goBackToEmail}
+              className="text-sm hover:underline font-medium mt-4"
+              style={{ color: '#00e0ff' }}
+            >
+              Use a different email
+            </button>
           </div>
         )}
 
@@ -402,7 +498,7 @@ export default function AuthSection() {
         )}
 
         {/* Main Auth Flow */}
-        {(step === 'email' || step === 'password' || step === 'forgot-password') && (
+        {(step === 'email' || step === 'create-password' || step === 'password' || step === 'forgot-password') && (
           <>
             <Button
               variant="outline"
@@ -449,20 +545,103 @@ export default function AuthSection() {
                     style={{ '--tw-ring-color': '#00e0ff' } as any}
                     disabled={loading}
                     onKeyDown={(e) => e.key === 'Enter' && handleEmailContinue()}
+                    autoFocus
                   />
                 </div>
 
                 <Button
                   onClick={handleEmailContinue}
                   disabled={loading}
-                  className="w-full h-12 text-white font-semibold rounded-xl bg-primary hover:opacity-90 transition-opacity"
+                  className="w-full h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: '#00e0ff' }}
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Continue'}
                 </Button>
               </div>
             )}
 
-            {/* Password Step */}
+            {/* Create Password Step (New Users) */}
+            {step === 'create-password' && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="create-password" className="text-gray-700 dark:text-gray-300 font-medium">Create password</Label>
+                  <div className="relative">
+                    <Input
+                      id="create-password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl pr-12"
+                      style={{ '--tw-ring-color': '#00e0ff' } as any}
+                      disabled={loading}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const confirmInput = document.getElementById('confirm-create-password') as HTMLInputElement
+                          if (confirmInput) confirmInput.focus()
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Must be at least 6 characters
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="confirm-create-password" className="text-gray-700 dark:text-gray-300 font-medium">Confirm password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm-create-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl pr-12"
+                      style={{ '--tw-ring-color': '#00e0ff' } as any}
+                      disabled={loading}
+                      onKeyDown={(e) => e.key === 'Enter' && handleCreateAccount()}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleCreateAccount}
+                  disabled={loading}
+                  className="w-full h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: '#00e0ff' }}
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create account'}
+                </Button>
+              </div>
+            )}
+
+            {/* Password Step (Existing Users) */}
             {step === 'password' && (
               <div className="space-y-4">
                 <div>
@@ -552,7 +731,7 @@ export default function AuthSection() {
         )}
       </div>
 
-      {(step === 'email' || step === 'password' || step === 'forgot-password') && (
+      {(step === 'email' || step === 'create-password' || step === 'password' || step === 'forgot-password') && (
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-6">
           By continuing, you agree to our{' '}
           <a href="#" className="hover:underline font-medium" style={{ color: '#00e0ff' }}>
