@@ -334,3 +334,16 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// Helper types for better type inference
+export type Profile = Tables<'profiles'>
+export type Application = Tables<'applications'>
+export type ActivityLog = Tables<'activity_log'>
+
+export type InsertProfile = TablesInsert<'profiles'>
+export type InsertApplication = TablesInsert<'applications'>
+export type InsertActivityLog = TablesInsert<'activity_log'>
+
+export type UpdateProfile = TablesUpdate<'profiles'>
+export type UpdateApplication = TablesUpdate<'applications'>
+export type UpdateActivityLog = TablesUpdate<'activity_log'>

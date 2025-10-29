@@ -9,7 +9,6 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // If already logged in, redirect to dashboard
   if (user) {
     redirect('/dashboard')
   }

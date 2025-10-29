@@ -1,6 +1,6 @@
 {
     "name": "Viam - Job Application Tracker",
-    "short_name": "Viam",
+    "short_name": "TraceAm",
     "description": "Smart job application tracking with AI-powered company matching. Find your way to the perfect role.",
     "start_url": "/",
     "display": "standalone",
