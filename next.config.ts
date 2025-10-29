@@ -1,7 +1,35 @@
-import type { NextConfig } from "next";
+// ==========================================
+// FILE: next.config.js (UPDATED)
+// ==========================================
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Enable PWA support
+  async headers() {
+    return [
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+        ],
+      },
+      {
+        source: '/service-worker.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+        ],
+      },
+    ]
+  },
+}
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
+module.exports = nextConfig

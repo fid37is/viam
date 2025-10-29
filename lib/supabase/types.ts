@@ -1,8 +1,3 @@
-// ==========================================
-// FILE: lib/supabase/types.ts
-// ==========================================
-// Database types generated from Supabase schema
-
 export type Json =
   | string
   | number
@@ -10,178 +5,332 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
-
-export interface Database {
+                                                                
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
-      profiles: {
+      activity_log: {
         Row: {
+          activity_type: string
+          application_id: string | null
+          created_at: string | null
+          details: Json | null
           id: string
-          created_at: string
-          updated_at: string
-          full_name: string | null
-          email: string | null
-          career_goals: string | null
-          short_term_goal: string | null
-          long_term_goal: string | null
-          top_values: Json
-          deal_breakers: Json
-          preferred_company_size: string[] | null
-          preferred_industries: string[] | null
-          work_location_preference: string | null
-          management_style_preference: string | null
-          profile_completed: boolean
-          onboarding_completed: boolean
+          user_id: string
         }
         Insert: {
-          id: string
-          created_at?: string
-          updated_at?: string
-          full_name?: string | null
-          email?: string | null
-          career_goals?: string | null
-          short_term_goal?: string | null
-          long_term_goal?: string | null
-          top_values?: Json
-          deal_breakers?: Json
-          preferred_company_size?: string[] | null
-          preferred_industries?: string[] | null
-          work_location_preference?: string | null
-          management_style_preference?: string | null
-          profile_completed?: boolean
-          onboarding_completed?: boolean
+          activity_type: string
+          application_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          user_id: string
         }
         Update: {
+          activity_type?: string
+          application_id?: string | null
+          created_at?: string | null
+          details?: Json | null
           id?: string
-          created_at?: string
-          updated_at?: string
-          full_name?: string | null
-          email?: string | null
-          career_goals?: string | null
-          short_term_goal?: string | null
-          long_term_goal?: string | null
-          top_values?: Json
-          deal_breakers?: Json
-          preferred_company_size?: string[] | null
-          preferred_industries?: string[] | null
-          work_location_preference?: string | null
-          management_style_preference?: string | null
-          profile_completed?: boolean
-          onboarding_completed?: boolean
+          user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_application_id_fkey"  
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       applications: {
         Row: {
-          id: string
-          user_id: string
-          created_at: string
-          updated_at: string
-          job_url: string
-          job_title: string
+          applied_date: string | null
+          company_info: Json | null
           company_name: string
           company_website: string | null
-          location: string | null
+          created_at: string | null
+          id: string
+          interview_dates: Json | null
           job_description: string | null
+          job_title: string
+          job_url: string
           key_requirements: string[] | null
-          status: string
-          applied_date: string | null
-          company_info: Json
-          match_score: number | null
-          match_analysis: Json
-          notes: string | null
-          user_interest_level: number | null
           last_follow_up: string | null
+          location: string | null
+          match_analysis: Json | null
+          match_score: number | null
           next_follow_up_reminder: string | null
-          interview_dates: Json
-          offer_details: Json
+          notes: string | null
+          offer_details: Json | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          user_interest_level: number | null
         }
         Insert: {
-          id?: string
-          user_id: string
-          created_at?: string
-          updated_at?: string
-          job_url: string
-          job_title: string
+          applied_date?: string | null
+          company_info?: Json | null
           company_name: string
           company_website?: string | null
-          location?: string | null
+          created_at?: string | null
+          id?: string
+          interview_dates?: Json | null
           job_description?: string | null
+          job_title: string
+          job_url: string
           key_requirements?: string[] | null
-          status?: string
-          applied_date?: string | null
-          company_info?: Json
-          match_score?: number | null
-          match_analysis?: Json
-          notes?: string | null
-          user_interest_level?: number | null
           last_follow_up?: string | null
+          location?: string | null
+          match_analysis?: Json | null
+          match_score?: number | null
           next_follow_up_reminder?: string | null
-          interview_dates?: Json
-          offer_details?: Json
+          notes?: string | null
+          offer_details?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          user_interest_level?: number | null
         }
         Update: {
-          id?: string
-          user_id?: string
-          created_at?: string
-          updated_at?: string
-          job_url?: string
-          job_title?: string
+          applied_date?: string | null
+          company_info?: Json | null
           company_name?: string
           company_website?: string | null
-          location?: string | null
+          created_at?: string | null
+          id?: string
+          interview_dates?: Json | null
           job_description?: string | null
+          job_title?: string
+          job_url?: string
           key_requirements?: string[] | null
-          status?: string
-          applied_date?: string | null
-          company_info?: Json
-          match_score?: number | null
-          match_analysis?: Json
-          notes?: string | null
-          user_interest_level?: number | null
           last_follow_up?: string | null
+          location?: string | null
+          match_analysis?: Json | null
+          match_score?: number | null
           next_follow_up_reminder?: string | null
-          interview_dates?: Json
-          offer_details?: Json
+          notes?: string | null
+          offer_details?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          user_interest_level?: number | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      activity_log: {
+      profiles: {
         Row: {
+          career_goals: string | null
+          created_at: string | null
+          deal_breakers: Json | null
+          email: string | null
+          full_name: string | null
           id: string
-          user_id: string
-          application_id: string | null
-          created_at: string
-          activity_type: string
-          details: Json
+          long_term_goal: string | null
+          management_style_preference: string | null
+          onboarding_completed: boolean | null
+          preferred_company_size: string[] | null
+          preferred_industries: string[] | null
+          profile_completed: boolean | null
+          short_term_goal: string | null
+          top_values: Json | null
+          updated_at: string | null
+          work_location_preference: string | null
         }
         Insert: {
-          id?: string
-          user_id: string
-          application_id?: string | null
-          created_at?: string
-          activity_type: string
-          details?: Json
+          career_goals?: string | null
+          created_at?: string | null
+          deal_breakers?: Json | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          long_term_goal?: string | null
+          management_style_preference?: string | null
+          onboarding_completed?: boolean | null
+          preferred_company_size?: string[] | null
+          preferred_industries?: string[] | null
+          profile_completed?: boolean | null
+          short_term_goal?: string | null
+          top_values?: Json | null
+          updated_at?: string | null
+          work_location_preference?: string | null
         }
         Update: {
+          career_goals?: string | null
+          created_at?: string | null
+          deal_breakers?: Json | null
+          email?: string | null
+          full_name?: string | null
           id?: string
-          user_id?: string
-          application_id?: string | null
-          created_at?: string
-          activity_type?: string
-          details?: Json
+          long_term_goal?: string | null
+          management_style_preference?: string | null
+          onboarding_completed?: boolean | null
+          preferred_company_size?: string[] | null
+          preferred_industries?: string[] | null
+          profile_completed?: boolean | null
+          short_term_goal?: string | null
+          top_values?: Json | null
+          updated_at?: string | null
+          work_location_preference?: string | null
         }
+        Relationships: []
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
 
-// Helper types for better type inference
-export type Profile = Database['public']['Tables']['profiles']['Row']
-export type Application = Database['public']['Tables']['applications']['Row']
-export type ActivityLog = Database['public']['Tables']['activity_log']['Row']
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-export type InsertProfile = Database['public']['Tables']['profiles']['Insert']
-export type InsertApplication = Database['public']['Tables']['applications']['Insert']
-export type InsertActivityLog = Database['public']['Tables']['activity_log']['Insert']
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-export type UpdateProfile = Database['public']['Tables']['profiles']['Update']
-export type UpdateApplication = Database['public']['Tables']['applications']['Update']
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])  
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {   
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {   
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {   
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {     
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]    
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
