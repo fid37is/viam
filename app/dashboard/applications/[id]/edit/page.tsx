@@ -1,14 +1,18 @@
+// app/dashboard/applications/[id]/edit/page.tsx
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import EditApplicationForm from '@/components/applications/edit-application-form'
 
 interface EditApplicationPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EditApplicationPage({ params }: EditApplicationPageProps) {
+  // Await params first
+  const { id } = await params
+  
   const supabase = await createClient()
 
   const {
@@ -19,11 +23,11 @@ export default async function EditApplicationPage({ params }: EditApplicationPag
     redirect('/')
   }
 
-  // Fetch application
+  // Fetch application - now use the awaited id
   const { data: application, error } = await supabase
     .from('applications')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', user.id)
     .single()
 
@@ -31,5 +35,18 @@ export default async function EditApplicationPage({ params }: EditApplicationPag
     notFound()
   }
 
-  return <EditApplicationForm application={application} />
+  return (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          Edit Application
+        </h1>
+        <p className="text-muted-foreground">
+          Update your job application details
+        </p>
+      </div>
+
+      <EditApplicationForm application={application} />
+    </div>
+  )
 }

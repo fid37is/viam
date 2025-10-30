@@ -136,17 +136,16 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 inline-flex">
+      <div className="bg-card rounded-2xl shadow-sm border border-border p-2 inline-flex">
         <button
           onClick={() => setActiveTab('account')}
           className={`
             px-6 py-3 rounded-xl text-sm font-medium transition-all
             ${activeTab === 'account'
-              ? 'text-black'
-              : 'text-gray-600 hover:bg-gray-50'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-muted'
             }
           `}
-          style={activeTab === 'account' ? { backgroundColor: '#00e0ff' } : {}}
         >
           <Settings className="w-4 h-4 inline mr-2" />
           Account
@@ -156,11 +155,10 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
           className={`
             px-6 py-3 rounded-xl text-sm font-medium transition-all
             ${activeTab === 'preferences'
-              ? 'text-black'
-              : 'text-gray-600 hover:bg-gray-50'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-muted'
             }
           `}
-          style={activeTab === 'preferences' ? { backgroundColor: '#00e0ff' } : {}}
         >
           <Briefcase className="w-4 h-4 inline mr-2" />
           Job Preferences
@@ -169,45 +167,44 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
 
       {/* Account Settings */}
       {activeTab === 'account' && (
-        <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Information</h2>
+        <div className="bg-card rounded-3xl shadow-lg p-8 border border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-6">Account Information</h2>
           
           <form onSubmit={handleSaveAccount} className="space-y-6">
             {/* Full Name */}
             <div>
-              <Label htmlFor="fullName" className="text-gray-700 font-medium">
+              <Label htmlFor="fullName" className="text-foreground font-medium">
                 Full Name
               </Label>
               <div className="relative mt-2">
-                <Settings className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Settings className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="fullName"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="John Doe"
-                  className="h-12 pl-10 border-gray-300 focus:border-transparent focus:ring-2 rounded-xl"
-                  style={{ '--tw-ring-color': '#00e0ff' } as any}
+                  className="h-12 pl-10 border-border focus:border-transparent focus:ring-2 focus:ring-ring rounded-xl bg-background text-foreground"
                 />
               </div>
             </div>
 
             {/* Email (read-only) */}
             <div>
-              <Label htmlFor="email" className="text-gray-700 font-medium">
+              <Label htmlFor="email" className="text-foreground font-medium">
                 Email
               </Label>
               <div className="relative mt-2">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   disabled
-                  className="h-12 pl-10 border-gray-300 bg-gray-50 rounded-xl cursor-not-allowed"
+                  className="h-12 pl-10 border-border bg-muted rounded-xl cursor-not-allowed text-muted-foreground"
                 />
               </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 Email cannot be changed
               </p>
             </div>
@@ -215,8 +212,7 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
             <Button
               type="submit"
               disabled={loading}
-              className="h-12 px-8 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: '#00e0ff' }}
+              className="h-12 px-8 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
             >
               {loading ? (
                 <>
@@ -238,9 +234,9 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
       {activeTab === 'preferences' && (
         <form onSubmit={handleSavePreferences} className="space-y-6">
           {/* Values */}
-          <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Career Values</h2>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-card rounded-3xl shadow-lg p-8 border border-border">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Career Values</h2>
+            <p className="text-muted-foreground mb-6">
               Select up to 5 values (currently {selectedValues.length} selected)
             </p>
 
@@ -258,20 +254,18 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
                     className={`
                       p-4 rounded-xl border-2 text-left transition-all
                       ${isSelected
-                        ? 'border-primary bg-primary/5'
+                        ? 'border-primary bg-primary/10'
                         : isDisabled
-                        ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-border bg-muted opacity-50 cursor-not-allowed'
+                        : 'border-border hover:border-muted-foreground hover:bg-muted'
                       }
                     `}
-                    style={isSelected ? { borderColor: '#00e0ff' } : {}}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-900">{value.label}</span>
+                      <span className="font-medium text-foreground">{value.label}</span>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center"
-                             style={{ backgroundColor: '#00e0ff' }}>
-                          <CheckCircle className="w-4 h-4 text-black" />
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-primary-foreground" />
                         </div>
                       )}
                     </div>
@@ -282,9 +276,9 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
           </div>
 
           {/* Deal Breakers */}
-          <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Deal Breakers</h2>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-card rounded-3xl shadow-lg p-8 border border-border">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Deal Breakers</h2>
+            <p className="text-muted-foreground mb-6">
               Select things you want to avoid
             </p>
 
@@ -300,18 +294,16 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
                     className={`
                       p-4 rounded-xl border-2 text-left transition-all
                       ${isSelected
-                        ? 'border-secondary bg-secondary/5'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-destructive bg-destructive/10'
+                        : 'border-border hover:border-muted-foreground hover:bg-muted'
                       }
                     `}
-                    style={isSelected ? { borderColor: '#ff304f' } : {}}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-900">{dealBreaker.label}</span>
+                      <span className="font-medium text-foreground">{dealBreaker.label}</span>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center"
-                             style={{ backgroundColor: '#ff304f' }}>
-                          <CheckCircle className="w-4 h-4 text-white" />
+                        <div className="w-5 h-5 rounded-full bg-destructive flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-destructive-foreground" />
                         </div>
                       )}
                     </div>
@@ -322,9 +314,9 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
           </div>
 
           {/* Work Location Preference */}
-          <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Work Location</h2>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-card rounded-3xl shadow-lg p-8 border border-border">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Work Location</h2>
+            <p className="text-muted-foreground mb-6">
               Your preferred work arrangement
             </p>
 
@@ -340,13 +332,12 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
                     className={`
                       p-4 rounded-xl border-2 text-center transition-all
                       ${isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-muted-foreground hover:bg-muted'
                       }
                     `}
-                    style={isSelected ? { borderColor: '#00e0ff' } : {}}
                   >
-                    <span className="font-medium text-gray-900">{location.label}</span>
+                    <span className="font-medium text-foreground">{location.label}</span>
                   </button>
                 )
               })}
@@ -358,8 +349,7 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
             <Button
               type="submit"
               disabled={loading}
-              className="h-12 px-8 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: '#00e0ff' }}
+              className="h-12 px-8 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
             >
               {loading ? (
                 <>

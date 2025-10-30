@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { scrapeJobPosting } from '@/lib/scrapers/job-scraper'
 
 export async function POST(request: Request) {
   try {
@@ -11,26 +12,41 @@ export async function POST(request: Request) {
       )
     }
 
-    // TODO: Implement actual scraping logic
-    // For now, return mock data
-    // In production, you would:
-    // 1. Use Cheerio/Playwright to scrape the page
-    // 2. Or use an AI API to extract info from the page content
-    // 3. Or use a service like ScraperAPI
-
-    // Mock response for testing
-    const mockData = {
-      jobTitle: 'Software Engineer',
-      companyName: 'Tech Company',
-      location: 'Remote',
-      description: 'We are looking for a talented software engineer...',
+    // Validate URL format
+    try {
+      new URL(url)
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid URL format' },
+        { status: 400 }
+      )
     }
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Scrape the job posting
+    const result = await scrapeJobPosting(url)
 
-    return NextResponse.json(mockData)
+    if (!result.success) {
+      return NextResponse.json(
+        { 
+          error: result.error || 'Failed to scrape job posting',
+          jobTitle: result.jobTitle,
+          companyName: result.companyName,
+          location: result.location,
+          description: result.description,
+        },
+        { status: 200 } // Still return 200 so partial data can be used
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      jobTitle: result.jobTitle,
+      companyName: result.companyName,
+      location: result.location,
+      description: result.description,
+    })
   } catch (error: any) {
+    console.error('Scrape job error:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to scrape job' },
       { status: 500 }

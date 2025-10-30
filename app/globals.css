@@ -4,54 +4,72 @@
 
 @layer base {
   :root {
+    /* Light Theme */
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --foreground: 203 12% 29%; /* #40514e */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 203 12% 29%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
-    /* Primary: #00e0ff (Cyan) - HSL: 186.67 100% 50% */
-    --primary: 186.67 100% 50%;
-    --primary-foreground: 0 0% 0%;
-    /* Secondary: #ff304f (Red/Pink) - HSL: 349.09 100% 59.41% */
-    --secondary: 349.09 100% 59.41%;
+    --popover-foreground: 203 12% 29%;
+    
+    /* Primary: #30e3ca (Teal) - HSL: 171 77% 54% */
+    --primary: 171 77% 54%;
+    --primary-foreground: 203 12% 29%;
+    
+    /* Secondary: #2f89fc (Blue) - HSL: 213 97% 59% */
+    --secondary: 213 97% 59%;
     --secondary-foreground: 0 0% 100%;
-    /* Accent: #74f9ff (Light Cyan) - HSL: 184.42 100% 72.75% */
-    --accent: 184.42 100% 72.75%;
-    --accent-foreground: 0 0% 0%;
+    
+    /* Accent: #40514e (Dark Teal) - HSL: 203 12% 29% */
+    --accent: 203 12% 29%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Navy: #002651 - HSL: 210 100% 16% */
+    --navy: 210 100% 16%;
+    --navy-foreground: 0 0% 100%;
+    
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --destructive: 349.09 100% 59.41%;
+    --muted-foreground: 203 12% 45%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 186.67 100% 50%;
+    --ring: 171 77% 54%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 100%;
-    /* Primary in dark mode */
-    --primary: 186.67 100% 50%;
-    --primary-foreground: 0 0% 0%;
-    /* Secondary in dark mode */
-    --secondary: 349.09 100% 59.41%;
+    /* Dark Theme */
+    --background: 210 100% 8%; /* Dark navy base */
+    --foreground: 171 77% 85%; /* Light teal */
+    --card: 210 100% 12%;
+    --card-foreground: 171 77% 85%;
+    --popover: 210 100% 12%;
+    --popover-foreground: 171 77% 85%;
+    
+    /* Primary: #30e3ca (Teal) */
+    --primary: 171 77% 54%;
+    --primary-foreground: 210 100% 8%;
+    
+    /* Secondary: #2f89fc (Blue) */
+    --secondary: 213 97% 59%;
     --secondary-foreground: 0 0% 100%;
-    /* Accent in dark mode */
-    --accent: 184.42 100% 72.75%;
-    --accent-foreground: 0 0% 0%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --destructive: 349.09 100% 59.41%;
+    
+    /* Accent: Lighter version for dark mode */
+    --accent: 203 12% 35%;
+    --accent-foreground: 171 77% 85%;
+    
+    /* Navy */
+    --navy: 210 100% 16%;
+    --navy-foreground: 0 0% 100%;
+    
+    --muted: 210 50% 20%;
+    --muted-foreground: 171 30% 70%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 186.67 100% 50%;
+    --border: 210 50% 20%;
+    --input: 210 50% 20%;
+    --ring: 171 77% 54%;
   }
 }
 
@@ -63,6 +81,7 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* Custom toast styles */
@@ -79,6 +98,35 @@
   }
 
   .toast[data-type="info"] {
-    color: #2563eb !important;
+    color: #2f89fc !important;
+  }
+}
+
+@layer utilities {
+  @keyframes pulse-slow {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.4;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.6;
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 4s ease-in-out infinite;
+  }
+
+  .delay-300 {
+    animation-delay: 0.3s;
+  }
+
+  .delay-700 {
+    animation-delay: 0.7s;
+  }
+
+  .delay-1000 {
+    animation-delay: 1s;
   }
 }

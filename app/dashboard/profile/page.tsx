@@ -23,11 +23,11 @@ export default async function ProfilePage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Profile Settings
         </h1>
-        <p className="text-gray-600">
-          Manage your account and job search preferences
+        <p className="text-muted-foreground">
+          Manage your account and job application preferences
         </p>
       </div>
 

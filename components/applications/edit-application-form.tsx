@@ -73,205 +73,176 @@ export default function EditApplicationForm({ application }: EditApplicationForm
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-8">
-        <Link href={`/dashboard/applications/${application.id}`}>
-          <Button variant="ghost" className="mb-4 -ml-2">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Application
-          </Button>
-        </Link>
-
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Edit Application
-        </h1>
-        <p className="text-gray-600">
-          Update your application details
-        </p>
-      </div>
-
-      {/* Form */}
-      <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
-        <form onSubmit={handleSave} className="space-y-6">
-          {/* Job URL */}
-          <div>
-            <Label htmlFor="jobUrl" className="text-gray-700 font-medium">
-              Job URL
-            </Label>
-            <div className="relative mt-2">
-              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                id="jobUrl"
-                type="url"
-                value={jobUrl}
-                onChange={(e) => setJobUrl(e.target.value)}
-                placeholder="https://example.com/jobs/software-engineer"
-                className="h-12 pl-10 border-gray-300 focus:border-transparent focus:ring-2 rounded-xl"
-                style={{ '--tw-ring-color': '#00e0ff' } as any}
-              />
-            </div>
-          </div>
-
-          {/* Job Title */}
-          <div>
-            <Label htmlFor="jobTitle" className="text-gray-700 font-medium">
-              Job Title <span className="text-red-500">*</span>
-            </Label>
-            <div className="relative mt-2">
-              <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                id="jobTitle"
-                type="text"
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
-                placeholder="Senior Software Engineer"
-                className="h-12 pl-10 border-gray-300 focus:border-transparent focus:ring-2 rounded-xl"
-                style={{ '--tw-ring-color': '#00e0ff' } as any}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Company Name */}
-          <div>
-            <Label htmlFor="companyName" className="text-gray-700 font-medium">
-              Company Name <span className="text-red-500">*</span>
-            </Label>
-            <div className="relative mt-2">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                id="companyName"
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Acme Corporation"
-                className="h-12 pl-10 border-gray-300 focus:border-transparent focus:ring-2 rounded-xl"
-                style={{ '--tw-ring-color': '#00e0ff' } as any}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Location */}
-          <div>
-            <Label htmlFor="location" className="text-gray-700 font-medium">
-              Location
-            </Label>
-            <div className="relative mt-2">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                id="location"
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="San Francisco, CA (Remote)"
-                className="h-12 pl-10 border-gray-300 focus:border-transparent focus:ring-2 rounded-xl"
-                style={{ '--tw-ring-color': '#00e0ff' } as any}
-              />
-            </div>
-          </div>
-
-          {/* Job Description */}
-          <div>
-            <Label htmlFor="jobDescription" className="text-gray-700 font-medium">
-              Job Description
-            </Label>
-            <Textarea
-              id="jobDescription"
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              placeholder="Paste the job description here..."
-              rows={6}
-              className="mt-2 border-gray-300 focus:border-transparent focus:ring-2 rounded-xl resize-none"
-              style={{ '--tw-ring-color': '#00e0ff' } as any}
+    <div className="bg-card rounded-3xl shadow-lg p-8 border border-border">
+      <form onSubmit={handleSave} className="space-y-6">
+        {/* Job URL */}
+        <div>
+          <Label htmlFor="jobUrl" className="text-foreground font-medium">
+            Job URL
+          </Label>
+          <div className="relative mt-2">
+            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              id="jobUrl"
+              type="url"
+              value={jobUrl}
+              onChange={(e) => setJobUrl(e.target.value)}
+              placeholder="https://example.com/jobs/software-engineer"
+              className="h-12 pl-10 border-border focus:border-transparent focus:ring-2 focus:ring-ring rounded-xl bg-background text-foreground"
             />
           </div>
+        </div>
 
-          {/* Application Status */}
-          <div>
-            <Label className="text-gray-700 font-medium mb-3 block">
-              Application Status
-            </Label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full h-12 px-4 border border-gray-300 rounded-xl focus:border-transparent focus:ring-2 focus:outline-none"
-              style={{ '--tw-ring-color': '#00e0ff' } as any}
-            >
-              <option value="not_applied">Not Applied</option>
-              <option value="applied">Applied</option>
-              <option value="interviewing">Interviewing</option>
-              <option value="offer">Offer</option>
-              <option value="rejected">Rejected</option>
-              <option value="withdrawn">Withdrawn</option>
-            </select>
-          </div>
-
-          {/* Applied Date */}
-          {(status === 'applied' || status === 'interviewing' || status === 'offer') && (
-            <div>
-              <Label htmlFor="appliedDate" className="text-gray-700 font-medium">
-                Application Date
-              </Label>
-              <Input
-                id="appliedDate"
-                type="date"
-                value={appliedDate}
-                onChange={(e) => setAppliedDate(e.target.value)}
-                className="h-12 mt-2 border-gray-300 focus:border-transparent focus:ring-2 rounded-xl"
-                style={{ '--tw-ring-color': '#00e0ff' } as any}
-              />
-            </div>
-          )}
-
-          {/* Notes */}
-          <div>
-            <Label htmlFor="notes" className="text-gray-700 font-medium">
-              Notes
-            </Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any additional notes or thoughts about this opportunity..."
-              rows={4}
-              className="mt-2 border-gray-300 focus:border-transparent focus:ring-2 rounded-xl resize-none"
-              style={{ '--tw-ring-color': '#00e0ff' } as any}
+        {/* Job Title */}
+        <div>
+          <Label htmlFor="jobTitle" className="text-foreground font-medium">
+            Job Title <span className="text-destructive">*</span>
+          </Label>
+          <div className="relative mt-2">
+            <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              id="jobTitle"
+              type="text"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="Senior Software Engineer"
+              className="h-12 pl-10 border-border focus:border-transparent focus:ring-2 focus:ring-ring rounded-xl bg-background text-foreground"
+              required
             />
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
-            <Link href={`/dashboard/applications/${application.id}`} className="flex-1">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 border-gray-300 rounded-xl"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-            </Link>
+        {/* Company Name */}
+        <div>
+          <Label htmlFor="companyName" className="text-foreground font-medium">
+            Company Name <span className="text-destructive">*</span>
+          </Label>
+          <div className="relative mt-2">
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              id="companyName"
+              type="text"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="Acme Corporation"
+              className="h-12 pl-10 border-border focus:border-transparent focus:ring-2 focus:ring-ring rounded-xl bg-background text-foreground"
+              required
+            />
+          </div>
+        </div>
 
+        {/* Location */}
+        <div>
+          <Label htmlFor="location" className="text-foreground font-medium">
+            Location
+          </Label>
+          <div className="relative mt-2">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              id="location"
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="San Francisco, CA (Remote)"
+              className="h-12 pl-10 border-border focus:border-transparent focus:ring-2 focus:ring-ring rounded-xl bg-background text-foreground"
+            />
+          </div>
+        </div>
+
+        {/* Job Description */}
+        <div>
+          <Label htmlFor="jobDescription" className="text-foreground font-medium">
+            Job Description
+          </Label>
+          <Textarea
+            id="jobDescription"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the job description here..."
+            rows={6}
+            className="mt-2 border-border focus:border-transparent focus:ring-2 focus:ring-ring rounded-xl resize-none bg-background text-foreground"
+          />
+        </div>
+
+        {/* Application Status */}
+        <div>
+          <Label className="text-foreground font-medium mb-3 block">
+            Application Status
+          </Label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-full h-12 px-4 border border-border rounded-xl focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none bg-background text-foreground"
+          >
+            <option value="not_applied">Not Applied</option>
+            <option value="applied">Applied</option>
+            <option value="interviewing">Interviewing</option>
+            <option value="offer">Offer</option>
+            <option value="rejected">Rejected</option>
+            <option value="withdrawn">Withdrawn</option>
+          </select>
+        </div>
+
+        {/* Applied Date */}
+        {(status === 'applied' || status === 'interviewing' || status === 'offer') && (
+          <div>
+            <Label htmlFor="appliedDate" className="text-foreground font-medium">
+              Application Date
+            </Label>
+            <Input
+              id="appliedDate"
+              type="date"
+              value={appliedDate}
+              onChange={(e) => setAppliedDate(e.target.value)}
+              className="h-12 mt-2 border-border focus:border-transparent focus:ring-2 focus:ring-ring rounded-xl bg-background text-foreground"
+            />
+          </div>
+        )}
+
+        {/* Notes */}
+        <div>
+          <Label htmlFor="notes" className="text-foreground font-medium">
+            Notes
+          </Label>
+          <Textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Any additional notes or thoughts about this opportunity..."
+            rows={4}
+            className="mt-2 border-border focus:border-transparent focus:ring-2 focus:ring-ring rounded-xl resize-none bg-background text-foreground"
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 pt-4">
+          <Link href={`/dashboard/applications/${application.id}`} className="flex-1">
             <Button
-              type="submit"
+              type="button"
+              variant="outline"
+              className="w-full h-12 border-border rounded-xl"
               disabled={loading}
-              className="flex-1 h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: '#00e0ff' }}
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
+              Cancel
             </Button>
-          </div>
-        </form>
-      </div>
+          </Link>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="flex-1 h-12 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   )
 }

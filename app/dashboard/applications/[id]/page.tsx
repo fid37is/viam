@@ -1,16 +1,16 @@
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
-import ApplicationDetail from '@/components/applications/application-detail';
+import ApplicationDetail from '@/components/applications/application-detail'
 
 interface ApplicationPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function ApplicationPage({ params }: ApplicationPageProps) {
   const supabase = await createClient()
+  const { id } = await params
 
   const {
     data: { user },
@@ -24,7 +24,7 @@ export default async function ApplicationPage({ params }: ApplicationPageProps) 
   const { data: application, error } = await supabase
     .from('applications')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', user.id)
     .single()
 

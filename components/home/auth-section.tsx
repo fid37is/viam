@@ -327,19 +327,19 @@ export default function AuthSection() {
   const getHeaderText = () => {
     switch (step) {
       case 'verify':
-        return { title: 'TrailAm', subtitle: 'Check your email' }
+        return { title: 'Never give up', subtitle: 'Check your email' }
       case 'create-password':
-        return { title: 'TrailAm', subtitle: 'Create your account' }
+        return { title: 'Join the Trailams', subtitle: 'Create your account' }
       case 'password':
-        return { title: 'TrailAm', subtitle: 'Welcome back' }
+        return { title: 'Loving it right?', subtitle: 'Welcome back' }
       case 'forgot-password':
-        return { title: 'TrailAm', subtitle: 'Reset your password' }
+        return { title: 'Did you forget?', subtitle: 'Reset your password' }
       case 'forgot-password-sent':
-        return { title: 'TrailAm', subtitle: 'Check your email' }
+        return { title: 'Almost Done', subtitle: 'Check your email' }
       case 'reset-password':
-        return { title: 'TrailAm', subtitle: 'Set new password' }
+        return { title: 'Did you forget?', subtitle: 'Set new password' }
       default:
-        return { title: 'TrailAm', subtitle: 'Find your way' }
+        return { title: 'You got this', subtitle: 'Keep track of it' }
     }
   }
 
@@ -368,8 +368,7 @@ export default function AuthSection() {
         {/* Email Verification Step */}
         {step === 'verify' && (
           <div className="text-center py-8 space-y-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
-                 style={{ backgroundColor: '#00e0ff20' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto bg-secondary-foreground">
               <span className="text-3xl">📧</span>
             </div>
             <div>
@@ -392,8 +391,7 @@ export default function AuthSection() {
         {/* Forgot Password Sent Step */}
         {step === 'forgot-password-sent' && (
           <div className="text-center py-8 space-y-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
-                 style={{ backgroundColor: '#00e0ff20' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto bg-secondary-foreground">
               <span className="text-3xl">📧</span>
             </div>
             <div>
@@ -408,8 +406,7 @@ export default function AuthSection() {
                 setStep('forgot-password')
                 setEmail('')
               }}
-              className="text-sm hover:underline font-medium mt-4"
-              style={{ color: '#00e0ff' }}
+              className="text-sm hover:underline font-medium mt-4 bg-secondary-foreground"
             >
               Didn't receive the email? Try again
             </button>
@@ -675,8 +672,7 @@ export default function AuthSection() {
                   <div className="mt-2 text-right">
                     <button
                       onClick={openForgotPassword}
-                      className="text-sm hover:underline font-medium"
-                      style={{ color: '#00e0ff' }}
+                      className="text-sm hover:underline font-medium text-secondary"
                       type="button"
                     >
                       Forgot password?
@@ -734,11 +730,11 @@ export default function AuthSection() {
       {(step === 'email' || step === 'create-password' || step === 'password' || step === 'forgot-password') && (
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-6">
           By continuing, you agree to our{' '}
-          <a href="#" className="hover:underline font-medium" style={{ color: '#00e0ff' }}>
+          <a href="#" className="hover:underline font-medium text-secondary">
             Terms
           </a>
           {' '}and{' '}
-          <a href="#" className="hover:underline font-medium" style={{ color: '#00e0ff' }}>
+          <a href="#" className="hover:underline font-medium text-secondary">
             Privacy Policy
           </a>
         </p>

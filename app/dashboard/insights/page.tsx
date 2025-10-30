@@ -22,11 +22,11 @@ export default async function InsightsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Insights
         </h1>
-        <p className="text-gray-600">
-          Analyze your job search progress and patterns
+        <p className="text-muted-foreground">
+          Analyze your job applications progress and patterns
         </p>
       </div>
 

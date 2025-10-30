@@ -57,109 +57,109 @@ export default function InsightsDashboard({ applications }: InsightsDashboardPro
 
   return (
     <div className="space-y-6">
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Overview Stats - Compact Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
-          icon={<Target className="w-6 h-6" />}
-          label="Total Applications"
+          icon={<Target className="w-5 h-5" />}
+          label="Total"
           value={totalApplications.toString()}
-          color="#00e0ff"
         />
         <StatCard
-          icon={<Clock className="w-6 h-6" />}
+          icon={<Clock className="w-5 h-5" />}
           label="In Progress"
           value={interviewingCount.toString()}
-          color="#fbbf24"
         />
         <StatCard
-          icon={<Award className="w-6 h-6" />}
-          label="Offers Received"
+          icon={<Award className="w-5 h-5" />}
+          label="Offers"
           value={offersCount.toString()}
-          color="#10b981"
         />
         <StatCard
-          icon={<TrendingUp className="w-6 h-6" />}
-          label="Response Rate"
+          icon={<TrendingUp className="w-5 h-5" />}
+          label="Response"
           value={`${responseRate}%`}
-          color="#00e0ff"
         />
       </div>
 
-      {/* Application Trend */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Application Activity</h2>
-        <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-xl ${isPositiveTrend ? 'bg-green-50' : 'bg-red-50'}`}>
-            {isPositiveTrend ? (
-              <TrendingUp className="w-6 h-6 text-green-600" />
-            ) : (
-              <TrendingDown className="w-6 h-6 text-red-600" />
-            )}
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">
-              {recentApps} applications
-            </p>
-            <p className="text-sm text-gray-600">
-              Last 7 days • {isPositiveTrend ? '+' : ''}{trendPercentage}% from previous week
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Status Breakdown */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Application Status Breakdown</h2>
-        <div className="space-y-4">
-          <StatusBar label="Applied" count={appliedCount} total={totalApplications} color="#3b82f6" />
-          <StatusBar label="Interviewing" count={interviewingCount} total={totalApplications} color="#fbbf24" />
-          <StatusBar label="Offers" count={offersCount} total={totalApplications} color="#10b981" />
-          <StatusBar label="Rejected" count={rejectedCount} total={totalApplications} color="#ef4444" />
-        </div>
-      </div>
-
-      {/* Average Match Score */}
-      {applications.some(app => app.match_score) && (
-        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Average Match Score</h2>
-          <div className="text-center">
-            <div className="text-5xl font-bold mb-2" style={{ color: '#00e0ff' }}>
-              {averageMatchScore}%
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Application Trend */}
+        <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Application Activity</h2>
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-xl ${isPositiveTrend ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+              {isPositiveTrend ? (
+                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+              ) : (
+                <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
+              )}
             </div>
-            <p className="text-gray-600">
-              Overall alignment with your preferences
-            </p>
+            <div>
+              <p className="text-2xl font-bold text-foreground">
+                {recentApps} applications
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Last 7 days • {isPositiveTrend ? '+' : ''}{trendPercentage}% from previous week
+              </p>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Top Locations */}
-      {topLocations.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Top Locations</h2>
-          <div className="space-y-3">
-            {topLocations.map(([location, count]) => (
-              <div key={location} className="flex items-center justify-between">
-                <span className="text-gray-700">{location}</span>
-                <span className="text-sm font-medium text-gray-500">
-                  {count} {count === 1 ? 'application' : 'applications'}
-                </span>
+        {/* Average Match Score */}
+        {applications.some(app => app.match_score) && (
+          <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Average Match Score</h2>
+            <div className="flex items-center gap-4">
+              <div className="text-5xl font-bold text-primary">
+                {averageMatchScore}%
               </div>
-            ))}
+              <p className="text-sm text-muted-foreground">
+                Overall alignment with your preferences
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Status Breakdown */}
+        <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
+          <h2 className="text-lg font-semibold text-foreground mb-6">Status Breakdown</h2>
+          <div className="space-y-4">
+            <StatusBar label="Applied" count={appliedCount} total={totalApplications} color="hsl(var(--secondary))" />
+            <StatusBar label="Interviewing" count={interviewingCount} total={totalApplications} color="#fbbf24" />
+            <StatusBar label="Offers" count={offersCount} total={totalApplications} color="#10b981" />
+            <StatusBar label="Rejected" count={rejectedCount} total={totalApplications} color="#ef4444" />
           </div>
         </div>
-      )}
+
+        {/* Top Locations */}
+        {topLocations.length > 0 && (
+          <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-6">Top Locations</h2>
+            <div className="space-y-3">
+              {topLocations.map(([location, count]) => (
+                <div key={location} className="flex items-center justify-between py-2">
+                  <span className="text-foreground font-medium">{location}</span>
+                  <span className="text-sm font-medium text-muted-foreground px-3 py-1 bg-muted rounded-full">
+                    {count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Recommendations */}
       {totalApplications > 0 && (
-        <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl p-6 border border-primary/20">
+        <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
           <div className="flex items-start gap-4">
-            <div className="p-2 rounded-lg" style={{ backgroundColor: '#00e0ff20' }}>
-              <AlertCircle className="w-6 h-6" style={{ color: '#00e0ff' }} />
+            <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+              <AlertCircle className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Recommendations</h3>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <h3 className="font-semibold text-foreground mb-2">Recommendations</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 {appliedCount === 0 && (
                   <li>• Start applying to the jobs you've tracked</li>
                 )}
@@ -180,15 +180,14 @@ export default function InsightsDashboard({ applications }: InsightsDashboardPro
 
       {/* Empty State */}
       {totalApplications === 0 && (
-        <div className="bg-white rounded-2xl shadow-sm p-12 border border-gray-100 text-center">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-               style={{ backgroundColor: '#00e0ff20' }}>
-            <Target className="w-8 h-8 text-gray-400" />
+        <div className="bg-card rounded-2xl shadow-sm p-12 border border-border text-center">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Target className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold text-foreground mb-2">
             No data yet
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-muted-foreground mb-6">
             Start tracking applications to see your insights
           </p>
         </div>
@@ -197,21 +196,20 @@ export default function InsightsDashboard({ applications }: InsightsDashboardPro
   )
 }
 
-function StatCard({ icon, label, value, color }: { 
+function StatCard({ icon, label, value }: { 
   icon: React.ReactNode
   label: string
   value: string
-  color: string
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}20` }}>
-          <div style={{ color }}>{icon}</div>
+    <div className="bg-card rounded-xl shadow-sm p-5 border border-border hover:border-primary/50 transition-colors">
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+          {icon}
         </div>
+        <div className="text-3xl font-bold text-foreground">{value}</div>
       </div>
-      <div className="text-3xl font-bold text-gray-900 mb-1">{value}</div>
-      <div className="text-sm text-gray-600">{label}</div>
+      <div className="text-sm text-muted-foreground">{label}</div>
     </div>
   )
 }
@@ -227,10 +225,10 @@ function StatusBar({ label, count, total, color }: {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
-        <span className="text-sm text-gray-600">{count} ({percentage}%)</span>
+        <span className="text-sm font-medium text-foreground">{label}</span>
+        <span className="text-sm text-muted-foreground">{count} ({percentage}%)</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div 
           className="h-full rounded-full transition-all duration-300"
           style={{ width: `${percentage}%`, backgroundColor: color }}

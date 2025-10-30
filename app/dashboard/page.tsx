@@ -21,7 +21,7 @@ export default async function DashboardPage() {
     .select('*')
     .eq('user_id', user!.id)
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(10)
 
   // Fetch profile
   const { data: profile } = await supabase
@@ -30,50 +30,44 @@ export default async function DashboardPage() {
     .eq('id', user!.id)
     .single()
 
+  const stats = {
+    total: applications?.length || 0,
+    applied: applications?.filter(a => a.status === 'applied').length || 0,
+    interviewing: applications?.filter(a => a.status === 'interviewing').length || 0,
+    offers: applications?.filter(a => a.status === 'offer').length || 0,
+  }
+
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {profile?.full_name || 'there'}!
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Track your job applications and discover the perfect fit
-        </p>
-      </div>
+      {/* Welcome Section with Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Welcome Card */}
+        <div className="lg:col-span-2 bg-card rounded-lg shadow-sm border border-border p-6">
+          <h1 className="text-3xl font-bold text-foreground">
+            Welcome back, {profile?.full_name || 'there'}!
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Track your job applications and discover the perfect fit
+          </p>
+        </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Applications"
-          value={applications?.length || 0}
-          color="blue"
-        />
-        <StatCard
-          label="Applied"
-          value={applications?.filter(a => a.status === 'applied').length || 0}
-          color="green"
-        />
-        <StatCard
-          label="Interviewing"
-          value={applications?.filter(a => a.status === 'interviewing').length || 0}
-          color="yellow"
-        />
-        <StatCard
-          label="Offers"
-          value={applications?.filter(a => a.status === 'offer').length || 0}
-          color="purple"
-        />
+        {/* Quick Stats - Compact Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard label="Total" value={stats.total} />
+          <StatCard label="Applied" value={stats.applied} />
+          <StatCard label="Interviewing" value={stats.interviewing} />
+          <StatCard label="Offers" value={stats.offers} />
+        </div>
       </div>
 
       {/* Recent Applications */}
-      <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="bg-card rounded-lg shadow-sm border border-border">
+        <div className="p-6 border-b border-border flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-foreground">
             Recent Applications
           </h2>
           <Link href="/dashboard/applications/new">
-            <Button>
+            <Button className="bg-primary text-primary-foreground hover:opacity-90">
               <Plus className="w-4 h-4 mr-2" />
               Add Application
             </Button>
@@ -83,11 +77,13 @@ export default async function DashboardPage() {
         <div className="p-6">
           {!applications || applications.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">
+              <p className="text-muted-foreground mb-4">
                 No applications yet. Start tracking your job search!
               </p>
               <Link href="/dashboard/applications/new">
-                <Button>Add Your First Application</Button>
+                <Button className="bg-primary text-primary-foreground hover:opacity-90">
+                  Add Your First Application
+                </Button>
               </Link>
             </div>
           ) : (
@@ -96,21 +92,21 @@ export default async function DashboardPage() {
                 <Link
                   key={app.id}
                   href={`/dashboard/applications/${app.id}`}
-                  className="block p-4 border rounded-lg hover:bg-gray-50 transition"
+                  className="block p-4 border border-border rounded-lg hover:bg-accent/5 transition"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-foreground">
                         {app.job_title}
                       </h3>
-                      <p className="text-sm text-gray-600">{app.company_name}</p>
+                      <p className="text-sm text-muted-foreground">{app.company_name}</p>
                     </div>
                     {app.match_score && (
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-2xl font-bold text-primary">
                           {app.match_score}%
                         </div>
-                        <div className="text-xs text-gray-500">Match</div>
+                        <div className="text-xs text-muted-foreground">Match</div>
                       </div>
                     )}
                   </div>
@@ -124,18 +120,11 @@ export default async function DashboardPage() {
   )
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
-  const colors: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-700',
-    green: 'bg-green-50 text-green-700',
-    yellow: 'bg-yellow-50 text-yellow-700',
-    purple: 'bg-purple-50 text-purple-700',
-  }
-
+function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      <div className="text-sm font-medium text-gray-600">{label}</div>
-      <div className={`mt-2 text-3xl font-bold ${colors[color]}`}>
+    <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+      <div className="text-xs font-medium text-muted-foreground mb-1">{label}</div>
+      <div className="text-2xl font-bold text-foreground">
         {value}
       </div>
     </div>

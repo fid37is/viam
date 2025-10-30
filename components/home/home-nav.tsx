@@ -9,43 +9,50 @@ export default function HomeNav() {
   const { theme, toggleTheme } = useTheme()
 
   return (
-    <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 transition-colors">
+    <nav className="bg-background border-b border-border sticky top-0 z-50 transition-colors backdrop-blur-sm bg-background/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-[-12px]">
             <Image 
               src="/trailam-logo.svg" 
               alt="TrailAm Logo" 
-              width={50} 
-              height={50}
-              className="w-40 h-60 pt-8"
+              width={15} 
+              height={15}
+              className="w-40 pt-8"
             />
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">TrailAm</span>
+            <span className="text-2xl font-bold text-foreground">TrailAm</span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <a 
+              href="#features" 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               Features
             </a>
-            <a href="#testimonials" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <a 
+              href="#testimonials" 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               Testimonials
             </a>
             
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
               aria-label="Toggle theme"
+              suppressHydrationWarning
             >
               {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-gray-400" />
+                <Sun className="w-5 h-5 text-primary" />
               ) : (
-                <Moon className="w-5 h-5 text-gray-600" />
+                <Moon className="w-5 h-5 text-accent" />
               )}
             </button>
 
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="px-6 py-3 rounded-lg font-semibold text-white bg-primary hover:opacity-90 transition-opacity"
+              className="px-6 py-2.5 rounded-lg font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
               Get Started
             </button>
@@ -54,19 +61,20 @@ export default function HomeNav() {
           <div className="md:hidden flex items-center space-x-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
               aria-label="Toggle theme"
+              suppressHydrationWarning
             >
               {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-gray-400" />
+                <Sun className="w-5 h-5 text-primary" />
               ) : (
-                <Moon className="w-5 h-5 text-gray-600" />
+                <Moon className="w-5 h-5 text-accent" />
               )}
             </button>
             
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="px-4 py-2 bg-primary rounded-lg font-semibold text-sm text-white hover:opacity-90 transition-opacity"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
             >
               Get Started
             </button>

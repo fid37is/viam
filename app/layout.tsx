@@ -7,12 +7,15 @@ import { ThemeProvider } from '@/components/providers/theme-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Viam - Find Your Way',
+  title: 'TrailAm - Find Your Way',
   description: 'Smart job application tracking with AI-powered company matching',
 }
 
 export const viewport: Viewport = {
-  themeColor: '#00e0ff',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#30e3ca' },
+    { media: '(prefers-color-scheme: dark)', color: '#002651' }
+  ],
 }
 
 export default function RootLayout({
@@ -22,11 +25,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('theme') || 
+                  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.classList.add(theme);
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
         <ThemeProvider>
           {children}
+          <ToastProvider />
         </ThemeProvider>
-        <ToastProvider />
       </body>
     </html>
   )
