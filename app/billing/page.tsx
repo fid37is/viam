@@ -5,48 +5,15 @@ import { createClient } from '@/lib/supabase/client'
 import { CreditCard, AlertCircle, Check, Zap, TrendingUp, Calendar, Download, Crown, Loader2, ArrowRight, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import type { User } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/types'
+
+// Use the helper types from your database file
+type Subscription = Database['public']['Tables']['subscriptions']['Row']
+type PaymentMethod = Database['public']['Tables']['payment_methods']['Row']
+type Invoice = Database['public']['Tables']['invoices']['Row']
 
 interface BillingPageProps {
   user: User
-}
-
-interface Subscription {
-  id: string
-  user_id: string
-  tier: 'free' | 'premium'
-  status: 'active' | 'canceled' | 'past_due' | 'trialing'
-  stripe_customer_id: string | null
-  stripe_subscription_id: string | null
-  current_period_start: string | null
-  current_period_end: string | null
-  cancel_at_period_end: boolean
-  created_at: string
-  updated_at: string
-}
-
-interface PaymentMethod {
-  id: string
-  user_id: string
-  stripe_payment_method_id: string
-  brand: string
-  last4: string
-  exp_month: number
-  exp_year: number
-  is_default: boolean
-  created_at: string
-}
-
-interface Invoice {
-  id: string
-  user_id: string
-  stripe_invoice_id: string
-  amount: number
-  currency: string
-  status: 'paid' | 'open' | 'void' | 'uncollectible'
-  invoice_pdf: string | null
-  period_start: string
-  period_end: string
-  created_at: string
 }
 
 interface UsageStats {
@@ -249,6 +216,7 @@ export default function BillingPage({ user }: BillingPageProps) {
           </p>
         </div>
 
+
         {/* Cancellation Warning */}
         {subscription?.cancel_at_period_end && (
           <div className="bg-destructive/10 border-2 border-destructive rounded-2xl p-6 flex items-start gap-4">
@@ -421,7 +389,7 @@ export default function BillingPage({ user }: BillingPageProps) {
                         ${(invoice.amount / 100).toFixed(2)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(invoice.created_at).toLocaleDateString()}
+                        {invoice.created_at ? new Date(invoice.created_at).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                   </div>
