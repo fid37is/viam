@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
+import { StripeSubscriptionComplete } from '@/types/stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia' as any
+  apiVersion: '2025-10-29.clover'
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -33,18 +34,24 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription
+        const subscription = event.data.object as StripeSubscriptionComplete
         const userId = subscription.metadata.userId
+
+        if (!userId) {
+          console.error('No userId in subscription metadata')
+          break
+        }
 
         await supabase
           .from('subscriptions')
           .update({
             tier: 'premium',
-            status: subscription.status as any,
+            status: subscription.status,
             stripe_subscription_id: subscription.id,
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            cancel_at_period_end: subscription.cancel_at_period_end
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            updated_at: new Date().toISOString()
           })
           .eq('user_id', userId)
 
@@ -52,15 +59,21 @@ export async function POST(req: NextRequest) {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription
+        const subscription = event.data.object as StripeSubscriptionComplete
         const userId = subscription.metadata.userId
+
+        if (!userId) {
+          console.error('No userId in subscription metadata')
+          break
+        }
 
         await supabase
           .from('subscriptions')
           .update({
             tier: 'free',
             status: 'canceled',
-            cancel_at_period_end: false
+            cancel_at_period_end: false,
+            updated_at: new Date().toISOString()
           })
           .eq('user_id', userId)
 
@@ -77,7 +90,7 @@ export async function POST(req: NextRequest) {
           .eq('stripe_customer_id', customerId)
           .single()
 
-        if (sub) {
+        if (sub && invoice.period_start && invoice.period_end) {
           await supabase
             .from('invoices')
             .insert({
@@ -86,9 +99,9 @@ export async function POST(req: NextRequest) {
               amount: invoice.amount_paid,
               currency: invoice.currency,
               status: 'paid',
-              invoice_pdf: invoice.invoice_pdf,
-              period_start: new Date(invoice.period_start! * 1000).toISOString(),
-              period_end: new Date(invoice.period_end! * 1000).toISOString()
+              invoice_pdf: invoice.invoice_pdf || null,
+              period_start: new Date(invoice.period_start * 1000).toISOString(),
+              period_end: new Date(invoice.period_end * 1000).toISOString()
             })
         }
 
@@ -108,7 +121,10 @@ export async function POST(req: NextRequest) {
         if (sub) {
           await supabase
             .from('subscriptions')
-            .update({ status: 'past_due' })
+            .update({ 
+              status: 'past_due',
+              updated_at: new Date().toISOString()
+            })
             .eq('user_id', sub.user_id)
         }
 

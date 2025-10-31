@@ -3,14 +3,14 @@ import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia'
+  apiVersion: '2025-10-29.clover'
 })
 
 export async function POST(req: NextRequest) {
   try {
     const { userId, email, priceId } = await req.json()
 
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get or create Stripe customer
     const { data: subscription } = await supabase
