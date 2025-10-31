@@ -1,20 +1,20 @@
+// app/api/create-checkout-session/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
+import { stripe } from '@/lib/stripe-client'
 import { createClient } from '@/lib/supabase/server'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-10-29.clover'
-})
 
 export async function POST(req: NextRequest) {
   try {
     const { userId, email, priceId } = await req.json()
-
-    // Get the origin from the request or use environment variable
     const origin = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'http://localhost:3000'
-    
-    // Ensure the URL has a scheme
     const baseUrl = origin.startsWith('http') ? origin : `https://${origin}`
+
+    if (!userId || !email || !priceId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: userId, email, priceId' },
+        { status: 400 }
+      )
+    }
 
     const supabase = await createClient()
     

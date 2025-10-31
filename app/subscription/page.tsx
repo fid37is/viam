@@ -1,9 +1,9 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { CreditCard, AlertCircle, Check, Zap, TrendingUp, Calendar, Download, Crown, Loader2, ArrowRight, Settings } from 'lucide-react'
+import { CreditCard, AlertCircle, Check, Zap, TrendingUp, Calendar, Download, Crown, Loader2, ArrowRight, Settings, ArrowLeft, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
@@ -19,6 +19,7 @@ interface UsageStats {
 }
 
 export default function BillingPage() {
+  const router = useRouter()
   const supabase = createClient()
   
   const [user, setUser] = useState<User | null>(null)
@@ -30,6 +31,7 @@ export default function BillingPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | null>(null)
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -211,10 +213,17 @@ export default function BillingPage() {
   const usagePercentage = usage ? (usage.applications_count / usage.applications_limit) * 100 : 0
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background py-12 px-4">
+      <div className="w-full max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-2 text-primary hover:opacity-75 transition-opacity mb-4 font-semibold"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Dashboard
+          </button>
           <h1 className="text-4xl font-bold text-foreground mb-2">Billing & Subscription</h1>
           <p className="text-muted-foreground text-lg">
             Manage your subscription and billing information
@@ -223,8 +232,8 @@ export default function BillingPage() {
 
         {/* Cancellation Warning */}
         {subscription?.cancel_at_period_end && (
-          <div className="bg-destructive/10 border-2 border-destructive rounded-2xl p-6 flex items-start gap-4">
-            <AlertCircle className="w-6 h-6 text-destructive flex-shrink-0 mt-0.5" />
+          <div className="bg-secondary/10 border-2 border-secondary rounded-2xl p-6 flex items-start gap-4">
+            <AlertCircle className="w-6 h-6 text-secondary flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h3 className="font-semibold text-foreground mb-1">
                 Subscription Ending Soon
@@ -256,12 +265,12 @@ export default function BillingPage() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                isPremium ? 'bg-primary/10' : 'bg-muted'
+                isPremium ? 'bg-primary/10' : 'bg-navy/10'
               }`}>
                 {isPremium ? (
                   <Crown className="w-6 h-6 text-primary" />
                 ) : (
-                  <Zap className="w-6 h-6 text-muted-foreground" />
+                  <Zap className="w-6 h-6 text-navy" />
                 )}
               </div>
               <div>
@@ -275,16 +284,6 @@ export default function BillingPage() {
                 </p>
               </div>
             </div>
-
-            {!isPremium && (
-              <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity flex items-center gap-2"
-              >
-                <Crown className="w-5 h-5" />
-                Upgrade to Premium
-              </button>
-            )}
           </div>
 
           {/* Usage Stats */}
@@ -300,7 +299,7 @@ export default function BillingPage() {
                 <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      usagePercentage >= 90 ? 'bg-destructive' : usagePercentage >= 70 ? 'bg-yellow-500' : 'bg-primary'
+                      usagePercentage >= 90 ? 'bg-secondary' : usagePercentage >= 70 ? 'bg-yellow-500' : 'bg-primary'
                     }`}
                     style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                   />
@@ -314,21 +313,128 @@ export default function BillingPage() {
                     <p className="text-sm text-foreground font-medium mb-1">
                       You're running low on applications
                     </p>
-                    <p className="text-sm text-muted-foreground mb-3">
+                    <p className="text-sm text-muted-foreground">
                       Upgrade to Premium for unlimited applications and advanced features.
                     </p>
-                    <button
-                      onClick={() => setShowUpgradeModal(true)}
-                      className="text-sm text-primary font-semibold hover:underline"
-                    >
-                      Upgrade Now →
-                    </button>
                   </div>
                 </div>
               )}
             </div>
           )}
         </div>
+
+        {/* Pricing Plans - Only show if free user */}
+        {!isPremium && (
+          <div className="space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-foreground mb-2">Upgrade to Premium</h2>
+              <p className="text-muted-foreground">Choose a plan that works for you</p>
+            </div>
+            
+            {/* Centered Pricing Cards */}
+            <div className="flex justify-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+                {/* Monthly Plan */}
+                <div
+                  onClick={() => {
+                    setSelectedPlan('monthly')
+                    setShowUpgradeModal(true)
+                  }}
+                  className={`group relative p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer transform hover:scale-105 ${
+                    selectedPlan === 'monthly'
+                      ? 'border-primary bg-primary/5 shadow-lg'
+                      : 'border-border hover:border-primary bg-card'
+                  }`}
+                >
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  
+                  <div className="relative z-10">
+                    <h3 className="text-xl font-semibold text-foreground mb-1">Monthly</h3>
+                    <p className="text-sm text-muted-foreground mb-6">Cancel anytime</p>
+                    
+                    <div className="mb-8">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-primary">$12</span>
+                        <span className="text-muted-foreground">/mo</span>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-3 mb-8">
+                      <li className="flex items-center gap-2 text-sm text-foreground">
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        Unlimited applications
+                      </li>
+                      <li className="flex items-center gap-2 text-sm text-foreground">
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        Advanced AI analysis
+                      </li>
+                      <li className="flex items-center gap-2 text-sm text-foreground">
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        Priority support
+                      </li>
+                    </ul>
+
+                    <div className="bg-primary text-primary-foreground py-2.5 px-4 rounded-lg text-center font-semibold text-sm transition-opacity group-hover:opacity-90">
+                      Choose Monthly
+                    </div>
+                  </div>
+                </div>
+
+                {/* Yearly Plan */}
+                <div
+                  onClick={() => {
+                    setSelectedPlan('yearly')
+                    setShowUpgradeModal(true)
+                  }}
+                  className={`group relative p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer transform hover:scale-105 ${
+                    selectedPlan === 'yearly'
+                      ? 'border-primary bg-primary/5 shadow-lg'
+                      : 'border-border hover:border-primary bg-card'
+                  }`}
+                >
+                  <div className="absolute -top-4 right-6 bg-gradient-to-r from-secondary to-secondary/80 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 animate-pulse">
+                    <Sparkles className="w-3 h-3" />
+                    Save 20%
+                  </div>
+
+                  <div className="relative z-10">
+                    <h3 className="text-xl font-semibold text-foreground mb-1">Yearly</h3>
+                    <p className="text-sm text-muted-foreground mb-6">Best value</p>
+                    
+                     <div className="mb-8">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-primary">$115</span>
+                        <span className="text-muted-foreground">/yr</span>
+                      </div>
+                      <p className="text-sm text-secondary font-semibold mt-2">
+                        <span className="line-through text-muted-foreground">$144</span> Save $29
+                      </p>
+                    </div>
+
+                    <ul className="space-y-3 mb-8">
+                      <li className="flex items-center gap-2 text-sm text-foreground">
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        Unlimited applications
+                      </li>
+                      <li className="flex items-center gap-2 text-sm text-foreground">
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        Advanced AI analysis
+                      </li>
+                      <li className="flex items-center gap-2 text-sm text-foreground">
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        Priority support
+                      </li>
+                    </ul>
+
+                    <div className="bg-primary text-primary-foreground py-2.5 px-4 rounded-lg text-center font-semibold text-sm transition-opacity group-hover:opacity-90">
+                      Choose Yearly
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Payment Method */}
         {isPremium && (
@@ -433,7 +539,7 @@ export default function BillingPage() {
             </p>
             <button
               onClick={() => setShowCancelModal(true)}
-              className="text-destructive font-semibold hover:underline"
+              className="text-secondary font-semibold hover:underline"
             >
               Cancel my subscription
             </button>
@@ -444,14 +550,17 @@ export default function BillingPage() {
       {/* Upgrade Modal */}
       {showUpgradeModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-border">
+          <div className="bg-card rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-border animate-in fade-in zoom-in-95 duration-300">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Crown className="w-8 h-8 text-primary" />
               </div>
               <h2 className="text-3xl font-bold text-foreground mb-2">Upgrade to Premium</h2>
               <p className="text-muted-foreground">
-                Unlock unlimited applications and all premium features
+                {selectedPlan === 'monthly' 
+                  ? '$12/month, cancel anytime'
+                  : '$144/year, save $36 (20% off)'
+                }
               </p>
             </div>
 
@@ -470,14 +579,11 @@ export default function BillingPage() {
               </div>
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-foreground">Instant delete anytime</span>
+                <span className="text-foreground">Resume optimization</span>
               </div>
-            </div>
-
-            <div className="text-center mb-6">
-              <div className="flex items-baseline justify-center gap-2">
-                <span className="text-5xl font-bold text-foreground">$12</span>
-                <span className="text-muted-foreground">/month</span>
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-foreground">24/7 priority support</span>
               </div>
             </div>
 
@@ -513,10 +619,10 @@ export default function BillingPage() {
       {/* Cancel Confirmation Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-border">
+          <div className="bg-card rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-border animate-in fade-in zoom-in-95 duration-300">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-destructive" />
+              <div className="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-secondary" />
               </div>
               <h2 className="text-3xl font-bold text-foreground mb-2">Cancel Subscription?</h2>
               <p className="text-muted-foreground">
@@ -528,16 +634,16 @@ export default function BillingPage() {
             <div className="space-y-3 mb-8 text-left">
               <p className="text-sm text-muted-foreground">You'll lose access to:</p>
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-destructive">
-                  <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                <div className="flex items-center gap-2 text-secondary">
+                  <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
                   <span className="text-sm">Unlimited applications</span>
                 </div>
-                <div className="flex items-center gap-2 text-destructive">
-                  <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                <div className="flex items-center gap-2 text-secondary">
+                  <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
                   <span className="text-sm">Advanced AI features</span>
                 </div>
-                <div className="flex items-center gap-2 text-destructive">
-                  <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                <div className="flex items-center gap-2 text-secondary">
+                  <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
                   <span className="text-sm">Priority support</span>
                 </div>
               </div>
@@ -553,7 +659,7 @@ export default function BillingPage() {
               <button
                 onClick={handleCancelSubscription}
                 disabled={actionLoading}
-                className="flex-1 py-3 rounded-xl border-2 border-destructive text-destructive font-semibold hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                className="flex-1 py-3 rounded-xl border-2 border-secondary text-secondary font-semibold hover:bg-secondary/10 transition-colors disabled:opacity-50"
               >
                 {actionLoading ? 'Processing...' : 'Cancel Subscription'}
               </button>

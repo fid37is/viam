@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Settings, Mail, Briefcase, CheckCircle } from 'lucide-react'
+import { Loader2, Settings, Mail, Briefcase, CheckCircle, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Profile } from '@/lib/supabase/types'
 import type { User } from '@supabase/supabase-js'
@@ -52,8 +53,9 @@ const WORK_LOCATIONS = [
 
 export default function ProfileSettings({ profile, user }: ProfileSettingsProps) {
   const supabase = createClient()
+  const router = useRouter()
 
-  const [activeTab, setActiveTab] = useState<'account' | 'preferences'>('account')
+  const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'billing'>('account')
   const [loading, setLoading] = useState(false)
 
   // Account fields
@@ -162,6 +164,19 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
         >
           <Briefcase className="w-4 h-4 inline mr-2" />
           Job Preferences
+        </button>
+        <button
+          onClick={() => setActiveTab('billing')}
+          className={`
+            px-6 py-3 rounded-xl text-sm font-medium transition-all
+            ${activeTab === 'billing'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-muted'
+            }
+          `}
+        >
+          <CreditCard className="w-4 h-4 inline mr-2" />
+          Billing
         </button>
       </div>
 
@@ -365,6 +380,24 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
             </Button>
           </div>
         </form>
+      )}
+
+      {/* Billing */}
+      {activeTab === 'billing' && (
+        <div className="bg-card rounded-3xl shadow-lg p-8 border border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Billing & Subscription</h2>
+          <p className="text-muted-foreground mb-8">
+            Manage your subscription plan and billing information
+          </p>
+
+          <button
+            onClick={() => router.push('/billing')}
+            className="inline-flex items-center gap-2 h-12 px-8 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
+          >
+            <CreditCard className="w-5 h-5" />
+            Go to Billing
+          </button>
+        </div>
       )}
     </div>
   )
