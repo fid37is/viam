@@ -10,6 +10,12 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, email, priceId } = await req.json()
 
+    // Get the origin from the request or use environment variable
+    const origin = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'http://localhost:3000'
+    
+    // Ensure the URL has a scheme
+    const baseUrl = origin.startsWith('http') ? origin : `https://${origin}`
+
     const supabase = await createClient()
     
     // Get or create Stripe customer
@@ -44,8 +50,8 @@ export async function POST(req: NextRequest) {
         }
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgrade=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing?upgrade=canceled`,
+      success_url: `${baseUrl}/dashboard?upgrade=success`,
+      cancel_url: `${baseUrl}/billing?upgrade=canceled`,
       metadata: { userId }
     })
 

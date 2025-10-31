@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -7,14 +8,9 @@ import { toast } from 'sonner'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 
-// Use the helper types from your database file
 type Subscription = Database['public']['Tables']['subscriptions']['Row']
 type PaymentMethod = Database['public']['Tables']['payment_methods']['Row']
 type Invoice = Database['public']['Tables']['invoices']['Row']
-
-interface BillingPageProps {
-  user: User
-}
 
 interface UsageStats {
   applications_count: number
@@ -22,9 +18,10 @@ interface UsageStats {
   ai_analyses_used: number
 }
 
-export default function BillingPage({ user }: BillingPageProps) {
+export default function BillingPage() {
   const supabase = createClient()
   
+  const [user, setUser] = useState<User | null>(null)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null)
   const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -35,14 +32,26 @@ export default function BillingPage({ user }: BillingPageProps) {
   const [showCancelModal, setShowCancelModal] = useState(false)
 
   useEffect(() => {
-    fetchBillingData()
-  }, [user.id])
+    const getCurrentUser = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      setUser(currentUser)
+    }
+    
+    getCurrentUser()
+  }, [])
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchBillingData()
+    }
+  }, [user?.id])
 
   const fetchBillingData = async () => {
+    if (!user?.id) return
+
     try {
       setLoading(true)
 
-      // Fetch subscription
       const { data: subData, error: subError } = await supabase
         .from('subscriptions')
         .select('*')
@@ -52,7 +61,6 @@ export default function BillingPage({ user }: BillingPageProps) {
       if (subError && subError.code !== 'PGRST116') throw subError
       setSubscription(subData)
 
-      // Fetch payment method
       const { data: pmData, error: pmError } = await supabase
         .from('payment_methods')
         .select('*')
@@ -63,7 +71,6 @@ export default function BillingPage({ user }: BillingPageProps) {
       if (pmError && pmError.code !== 'PGRST116') throw pmError
       setPaymentMethod(pmData)
 
-      // Fetch invoices
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
         .select('*')
@@ -74,7 +81,6 @@ export default function BillingPage({ user }: BillingPageProps) {
       if (invoiceError) throw invoiceError
       setInvoices(invoiceData || [])
 
-      // Fetch usage stats
       const { data: appsData, error: appsError } = await supabase
         .from('applications')
         .select('id', { count: 'exact' })
@@ -102,13 +108,12 @@ export default function BillingPage({ user }: BillingPageProps) {
   const handleUpgradeToPremium = async () => {
     setActionLoading(true)
     try {
-      // Call your Stripe checkout endpoint
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user.id,
-          email: user.email,
+          userId: user?.id,
+          email: user?.email,
           priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID
         })
       })
@@ -215,7 +220,6 @@ export default function BillingPage({ user }: BillingPageProps) {
             Manage your subscription and billing information
           </p>
         </div>
-
 
         {/* Cancellation Warning */}
         {subscription?.cancel_at_period_end && (
