@@ -6,22 +6,22 @@
   :root {
     /* Light Theme */
     --background: 0 0% 100%;
-    --foreground: 203 12% 29%; /* #40514e */
+    --foreground: 174 12% 29%; /* #40514e */
     --card: 0 0% 100%;
-    --card-foreground: 203 12% 29%;
+    --card-foreground: 174 12% 29%;
     --popover: 0 0% 100%;
-    --popover-foreground: 203 12% 29%;
+    --popover-foreground: 174 12% 29%;
     
-    /* Primary: #30e3ca (Teal) - HSL: 171 77% 54% */
-    --primary: 171 77% 54%;
-    --primary-foreground: 203 12% 29%;
+    /* Primary: #28c7fa (Bright Cyan Blue) - HSL: 195 95% 57% */
+    --primary: 195 95% 57%;
+    --primary-foreground: 0 0% 100%;
     
-    /* Secondary: #2f89fc (Blue) - HSL: 213 97% 59% */
-    --secondary: 213 97% 59%;
+    /* Secondary: #ff304f (Red/Pink) - HSL: 349 100% 59% */
+    --secondary: 349 100% 59%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Accent: #40514e (Dark Teal) - HSL: 203 12% 29% */
-    --accent: 203 12% 29%;
+    /* Accent: #40514e (Dark Teal) - HSL: 174 12% 29% */
+    --accent: 174 12% 29%;
     --accent-foreground: 0 0% 100%;
     
     /* Navy: #002651 - HSL: 210 100% 16% */
@@ -29,47 +29,47 @@
     --navy-foreground: 0 0% 100%;
     
     --muted: 210 40% 96.1%;
-    --muted-foreground: 203 12% 45%;
+    --muted-foreground: 174 12% 45%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 171 77% 54%;
+    --ring: 195 95% 57%;
     --radius: 0.5rem;
   }
 
   .dark {
     /* Dark Theme */
     --background: 210 100% 8%; /* Dark navy base */
-    --foreground: 171 77% 85%; /* Light teal */
+    --foreground: 0 0% 95%; /* Light gray/white */
     --card: 210 100% 12%;
-    --card-foreground: 171 77% 85%;
+    --card-foreground: 0 0% 95%;
     --popover: 210 100% 12%;
-    --popover-foreground: 171 77% 85%;
+    --popover-foreground: 0 0% 95%;
     
-    /* Primary: #30e3ca (Teal) */
-    --primary: 171 77% 54%;
-    --primary-foreground: 210 100% 8%;
+    /* Primary: #28c7fa (Bright Cyan Blue) */
+    --primary: 195 95% 57%;
+    --primary-foreground: 0 0% 100%;
     
-    /* Secondary: #2f89fc (Blue) */
-    --secondary: 213 97% 59%;
+    /* Secondary: #ff304f (Red/Pink) */
+    --secondary: 349 100% 59%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Accent: Lighter version for dark mode */
-    --accent: 203 12% 35%;
-    --accent-foreground: 171 77% 85%;
+    /* Accent: Lighter teal for dark mode */
+    --accent: 174 12% 35%;
+    --accent-foreground: 0 0% 95%;
     
     /* Navy */
     --navy: 210 100% 16%;
     --navy-foreground: 0 0% 100%;
     
     --muted: 210 50% 20%;
-    --muted-foreground: 171 30% 70%;
+    --muted-foreground: 0 0% 70%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 210 50% 20%;
     --input: 210 50% 20%;
-    --ring: 171 77% 54%;
+    --ring: 195 95% 57%;
   }
 }
 
@@ -98,7 +98,7 @@
   }
 
   .toast[data-type="info"] {
-    color: #2f89fc !important;
+    color: #28c7fa !important;
   }
 }
 

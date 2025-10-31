@@ -24,11 +24,17 @@ export default function AuthSection() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isNewUser, setIsNewUser] = useState(false)
+  const [intentUpgrade, setIntentUpgrade] = useState(false)
 
-  // Check for errors or recovery type in URL
+  // Check for subscription intent and errors in URL
   useEffect(() => {
     const error = searchParams.get('error')
     const type = searchParams.get('type')
+    const upgrade = searchParams.get('upgrade')
+    
+    if (upgrade === 'true') {
+      setIntentUpgrade(true)
+    }
     
     if (error) {
       const errorMessages: Record<string, string> = {
@@ -36,9 +42,7 @@ export default function AuthSection() {
         'verification_failed': 'Email verification failed. Please try again.',
         'no_token': 'Invalid verification link.',
       }
-      toast.error(errorMessages[error] || 'An error occurred', {
-        style: { color: '#dc2626' }
-      })
+      toast.error(errorMessages[error] || 'An error occurred')
     }
     
     if (type === 'recovery') {
@@ -51,46 +55,49 @@ export default function AuthSection() {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user && step !== 'reset-password') {
-        router.push('/dashboard')
+        // If user is authenticated and wants to upgrade, redirect to subscription
+        if (intentUpgrade) {
+          router.push('/subscription')
+        } else {
+          router.push('/dashboard')
+        }
       }
     }
     checkUser()
-  }, [])
+  }, [intentUpgrade])
 
   const handleGoogleSignIn = async () => {
     setLoading(true)
     
     try {
+      const redirectUrl = intentUpgrade 
+        ? `${window.location.origin}/auth/callback?redirect=/subscription`
+        : `${window.location.origin}/auth/callback`
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
         },
       })
       
       if (error) throw error
     } catch (err: any) {
-      toast.error(err.message || 'Failed to sign in with Google', {
-        style: { color: '#dc2626' }
-      })
+      toast.error(err.message || 'Failed to sign in with Google')
       setLoading(false)
     }
   }
 
   const handleEmailContinue = async () => {
     if (!email) {
-      toast.error('Please enter your email', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Please enter your email')
       return
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email address', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Please enter a valid email address')
       return
     }
 
@@ -110,9 +117,7 @@ export default function AuthSection() {
           setStep('password')
         } else if (signInError.message.includes('Email not confirmed')) {
           // User exists but hasn't verified email
-          toast.error('Please verify your email first. Check your inbox for the verification link.', {
-            style: { color: '#dc2626' }
-          })
+          toast.error('Please verify your email first. Check your inbox for the verification link.')
         } else {
           // New user - go to create password step
           setIsNewUser(true)
@@ -124,9 +129,7 @@ export default function AuthSection() {
         setStep('password')
       }
     } catch (err: any) {
-      toast.error(err.message, {
-        style: { color: '#dc2626' }
-      })
+      toast.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -134,42 +137,43 @@ export default function AuthSection() {
 
   const handleCreateAccount = async () => {
     if (!password) {
-      toast.error('Please enter a password', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Please enter a password')
       return
     }
 
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Password must be at least 6 characters')
       return
     }
 
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Passwords do not match')
       return
     }
 
     setLoading(true)
 
     try {
+      // Build redirect URL with subscription intent
+      const baseRedirect = `${window.location.origin}/auth/callback`
+      const redirectUrl = intentUpgrade 
+        ? `${baseRedirect}?redirect=/subscription&new_user=true`
+        : `${baseRedirect}?new_user=true`
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: redirectUrl,
+          data: {
+            intent_upgrade: intentUpgrade
+          }
         },
       })
 
       if (error) {
         if (error.message.includes('User already registered')) {
-          toast.error('This email is already registered. Please sign in instead.', {
-            style: { color: '#dc2626' }
-          })
+          toast.error('This email is already registered. Please sign in instead.')
           setIsNewUser(false)
           setStep('password')
         } else {
@@ -179,9 +183,7 @@ export default function AuthSection() {
         setStep('verify')
       }
     } catch (err: any) {
-      toast.error(err.message, {
-        style: { color: '#dc2626' }
-      })
+      toast.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -189,47 +191,43 @@ export default function AuthSection() {
 
   const handlePasswordSubmit = async () => {
     if (!password) {
-      toast.error('Please enter your password', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Please enter your password')
       return
     }
 
     setLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          toast.error('Invalid password', {
-            style: { color: '#dc2626' }
-          })
+          toast.error('Invalid password')
           setLoading(false)
           return
         }
         if (error.message.includes('Email not confirmed')) {
-          toast.error('Please verify your email first. Check your inbox for the verification link.', {
-            style: { color: '#dc2626' }
-          })
+          toast.error('Please verify your email first. Check your inbox for the verification link.')
           setLoading(false)
           return
         }
         throw error
       }
 
-      toast.success('Welcome back!', {
-        style: { color: '#16a34a' }
-      })
-      router.push('/dashboard')
+      toast.success('Welcome back!')
+      
+      // Redirect based on subscription intent
+      if (intentUpgrade) {
+        router.push('/subscription')
+      } else {
+        router.push('/dashboard')
+      }
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message, {
-        style: { color: '#dc2626' }
-      })
+      toast.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -237,9 +235,7 @@ export default function AuthSection() {
 
   const handleForgotPasswordSubmit = async () => {
     if (!email) {
-      toast.error('Please enter your email', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Please enter your email')
       return
     }
 
@@ -254,9 +250,7 @@ export default function AuthSection() {
 
       setStep('forgot-password-sent')
     } catch (err: any) {
-      toast.error(err.message, {
-        style: { color: '#dc2626' }
-      })
+      toast.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -264,23 +258,17 @@ export default function AuthSection() {
 
   const handleResetPasswordSubmit = async () => {
     if (!password || !confirmPassword) {
-      toast.error('Please fill in all fields', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Please fill in all fields')
       return
     }
 
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Passwords do not match')
       return
     }
 
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters', {
-        style: { color: '#dc2626' }
-      })
+      toast.error('Password must be at least 6 characters')
       return
     }
 
@@ -293,16 +281,12 @@ export default function AuthSection() {
 
       if (error) throw error
 
-      toast.success('Password reset successfully!', {
-        style: { color: '#16a34a' }
-      })
+      toast.success('Password reset successfully!')
       
       router.push('/dashboard')
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message, {
-        style: { color: '#dc2626' }
-      })
+      toast.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -339,49 +323,58 @@ export default function AuthSection() {
       case 'reset-password':
         return { title: 'Did you forget?', subtitle: 'Set new password' }
       default:
-        return { title: 'You got this', subtitle: 'Keep track of it' }
+        return { 
+          title: intentUpgrade ? 'Upgrade to Premium' : 'You got this', 
+          subtitle: intentUpgrade ? 'Sign in or create account to continue' : 'Keep track of it' 
+        }
     }
   }
 
   const headerText = getHeaderText()
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 max-w-md w-full border border-gray-100 dark:border-gray-700 relative transition-colors">
+    <div className="bg-card rounded-3xl shadow-2xl p-8 max-w-md w-full border border-border relative transition-colors">
       {/* Header with back button */}
       <div className="mb-8">
         <div className="flex items-center justify-center relative">
           {(step === 'password' || step === 'create-password' || step === 'forgot-password') && (
             <button
               onClick={step === 'forgot-password' ? goBackToPassword : goBackToEmail}
-              className="absolute left-0 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full transition-colors"
+              className="absolute left-0 p-2 hover:bg-muted rounded-full transition-colors"
               aria-label="Go back"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </button>
           )}
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{headerText.title}</h1>
+          <h1 className="text-4xl font-bold text-foreground">{headerText.title}</h1>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 text-center mt-2">{headerText.subtitle}</p>
+        <p className="text-muted-foreground text-center mt-2">{headerText.subtitle}</p>
       </div>
 
       <div className="space-y-4">
         {/* Email Verification Step */}
         {step === 'verify' && (
           <div className="text-center py-8 space-y-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto bg-secondary-foreground">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto bg-muted">
               <span className="text-3xl">📧</span>
             </div>
             <div>
-              <p className="text-gray-700 dark:text-gray-300">We sent a verification link to</p>
-              <p className="font-semibold text-gray-900 dark:text-white mt-1">{email}</p>
+              <p className="text-muted-foreground">We sent a verification link to</p>
+              <p className="font-semibold text-foreground mt-1">{email}</p>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Click the link in your email to complete your registration and sign in
+            <p className="text-sm text-muted-foreground">
+              Click the link in your email to complete your registration{intentUpgrade ? ' and upgrade to Premium' : ''}
             </p>
+            {intentUpgrade && (
+              <div className="mt-4 p-4 bg-primary/10 rounded-lg">
+                <p className="text-sm text-foreground font-medium">
+                  After verification, you'll go through a quick onboarding, then be redirected to complete your Premium upgrade.
+                </p>
+              </div>
+            )}
             <button
               onClick={goBackToEmail}
-              className="text-sm hover:underline font-medium mt-4"
-              style={{ color: '#00e0ff' }}
+              className="text-sm text-primary hover:underline font-medium mt-4"
             >
               Use a different email
             </button>
@@ -391,14 +384,14 @@ export default function AuthSection() {
         {/* Forgot Password Sent Step */}
         {step === 'forgot-password-sent' && (
           <div className="text-center py-8 space-y-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto bg-secondary-foreground">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto bg-muted">
               <span className="text-3xl">📧</span>
             </div>
             <div>
-              <p className="text-gray-700 dark:text-gray-300">We sent a password reset link to</p>
-              <p className="font-semibold text-gray-900 dark:text-white mt-1">{email}</p>
+              <p className="text-muted-foreground">We sent a password reset link to</p>
+              <p className="font-semibold text-foreground mt-1">{email}</p>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Click the link in your email to reset your password
             </p>
             <button
@@ -406,7 +399,7 @@ export default function AuthSection() {
                 setStep('forgot-password')
                 setEmail('')
               }}
-              className="text-sm hover:underline font-medium mt-4 bg-secondary-foreground"
+              className="text-sm text-primary hover:underline font-medium mt-4"
             >
               Didn't receive the email? Try again
             </button>
@@ -417,7 +410,7 @@ export default function AuthSection() {
         {step === 'reset-password' && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="new-password" className="text-gray-700 dark:text-gray-300 font-medium">New password</Label>
+              <Label htmlFor="new-password" className="text-foreground font-medium">New password</Label>
               <div className="relative">
                 <Input
                   id="new-password"
@@ -425,8 +418,7 @@ export default function AuthSection() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl pr-12"
-                  style={{ '--tw-ring-color': '#00e0ff' } as any}
+                  className="h-12 mt-1 bg-background border-input text-foreground focus:border-transparent focus:ring-2 focus:ring-primary rounded-xl pr-12"
                   disabled={loading}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -439,23 +431,23 @@ export default function AuthSection() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-muted rounded-lg transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <EyeOff className="w-5 h-5 text-muted-foreground" />
                   ) : (
-                    <Eye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <Eye className="w-5 h-5 text-muted-foreground" />
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Must be at least 6 characters
               </p>
             </div>
 
             <div>
-              <Label htmlFor="confirm-password" className="text-gray-700 dark:text-gray-300 font-medium">Confirm new password</Label>
+              <Label htmlFor="confirm-password" className="text-foreground font-medium">Confirm new password</Label>
               <div className="relative">
                 <Input
                   id="confirm-password"
@@ -463,21 +455,20 @@ export default function AuthSection() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl pr-12"
-                  style={{ '--tw-ring-color': '#00e0ff' } as any}
+                  className="h-12 mt-1 bg-background border-input text-foreground focus:border-transparent focus:ring-2 focus:ring-primary rounded-xl pr-12"
                   disabled={loading}
                   onKeyDown={(e) => e.key === 'Enter' && handleResetPasswordSubmit()}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-muted rounded-lg transition-colors"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <EyeOff className="w-5 h-5 text-muted-foreground" />
                   ) : (
-                    <Eye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <Eye className="w-5 h-5 text-muted-foreground" />
                   )}
                 </button>
               </div>
@@ -486,8 +477,7 @@ export default function AuthSection() {
             <Button
               onClick={handleResetPasswordSubmit}
               disabled={loading}
-              className="w-full h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: '#00e0ff' }}
+              className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl hover:brightness-110 transition-all"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Reset password'}
             </Button>
@@ -499,7 +489,7 @@ export default function AuthSection() {
           <>
             <Button
               variant="outline"
-              className="w-full h-12 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 dark:text-white transition-all rounded-xl"
+              className="w-full h-12 border-input hover:bg-muted bg-background text-foreground transition-all rounded-xl"
               onClick={handleGoogleSignIn}
               disabled={loading}
             >
@@ -520,10 +510,10 @@ export default function AuthSection() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+                <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">or</span>
+                <span className="px-3 bg-card text-muted-foreground">or</span>
               </div>
             </div>
 
@@ -531,15 +521,14 @@ export default function AuthSection() {
             {step === 'email' && (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 font-medium">Email</Label>
+                  <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl"
-                    style={{ '--tw-ring-color': '#00e0ff' } as any}
+                    className="h-12 mt-1 bg-background border-input text-foreground focus:border-transparent focus:ring-2 focus:ring-primary rounded-xl"
                     disabled={loading}
                     onKeyDown={(e) => e.key === 'Enter' && handleEmailContinue()}
                     autoFocus
@@ -549,8 +538,7 @@ export default function AuthSection() {
                 <Button
                   onClick={handleEmailContinue}
                   disabled={loading}
-                  className="w-full h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: '#00e0ff' }}
+                  className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl hover:brightness-110 transition-all"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Continue'}
                 </Button>
@@ -561,7 +549,7 @@ export default function AuthSection() {
             {step === 'create-password' && (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="create-password" className="text-gray-700 dark:text-gray-300 font-medium">Create password</Label>
+                  <Label htmlFor="create-password" className="text-foreground font-medium">Create password</Label>
                   <div className="relative">
                     <Input
                       id="create-password"
@@ -569,8 +557,7 @@ export default function AuthSection() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl pr-12"
-                      style={{ '--tw-ring-color': '#00e0ff' } as any}
+                      className="h-12 mt-1 bg-background border-input text-foreground focus:border-transparent focus:ring-2 focus:ring-primary rounded-xl pr-12"
                       disabled={loading}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -583,23 +570,23 @@ export default function AuthSection() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-muted rounded-lg transition-colors"
                       tabIndex={-1}
                     >
                       {showPassword ? (
-                        <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <EyeOff className="w-5 h-5 text-muted-foreground" />
                       ) : (
-                        <Eye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <Eye className="w-5 h-5 text-muted-foreground" />
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Must be at least 6 characters
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="confirm-create-password" className="text-gray-700 dark:text-gray-300 font-medium">Confirm password</Label>
+                  <Label htmlFor="confirm-create-password" className="text-foreground font-medium">Confirm password</Label>
                   <div className="relative">
                     <Input
                       id="confirm-create-password"
@@ -607,21 +594,20 @@ export default function AuthSection() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl pr-12"
-                      style={{ '--tw-ring-color': '#00e0ff' } as any}
+                      className="h-12 mt-1 bg-background border-input text-foreground focus:border-transparent focus:ring-2 focus:ring-primary rounded-xl pr-12"
                       disabled={loading}
                       onKeyDown={(e) => e.key === 'Enter' && handleCreateAccount()}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-muted rounded-lg transition-colors"
                       tabIndex={-1}
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <EyeOff className="w-5 h-5 text-muted-foreground" />
                       ) : (
-                        <Eye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <Eye className="w-5 h-5 text-muted-foreground" />
                       )}
                     </button>
                   </div>
@@ -630,8 +616,7 @@ export default function AuthSection() {
                 <Button
                   onClick={handleCreateAccount}
                   disabled={loading}
-                  className="w-full h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: '#00e0ff' }}
+                  className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl hover:brightness-110 transition-all"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create account'}
                 </Button>
@@ -642,7 +627,7 @@ export default function AuthSection() {
             {step === 'password' && (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="password" className="text-gray-700 dark:text-gray-300 font-medium">Password</Label>
+                  <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -650,8 +635,7 @@ export default function AuthSection() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl pr-12"
-                      style={{ '--tw-ring-color': '#00e0ff' } as any}
+                      className="h-12 mt-1 bg-background border-input text-foreground focus:border-transparent focus:ring-2 focus:ring-primary rounded-xl pr-12"
                       disabled={loading}
                       onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
                       autoFocus
@@ -659,20 +643,20 @@ export default function AuthSection() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 p-2 hover:bg-muted rounded-lg transition-colors"
                       tabIndex={-1}
                     >
                       {showPassword ? (
-                        <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <EyeOff className="w-5 h-5 text-muted-foreground" />
                       ) : (
-                        <Eye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <Eye className="w-5 h-5 text-muted-foreground" />
                       )}
                     </button>
                   </div>
                   <div className="mt-2 text-right">
                     <button
                       onClick={openForgotPassword}
-                      className="text-sm hover:underline font-medium text-secondary"
+                      className="text-sm text-secondary hover:underline font-medium"
                       type="button"
                     >
                       Forgot password?
@@ -683,8 +667,7 @@ export default function AuthSection() {
                 <Button
                   onClick={handlePasswordSubmit}
                   disabled={loading}
-                  className="w-full h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: '#00e0ff' }}
+                  className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl hover:brightness-110 transition-all"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign in'}
                 </Button>
@@ -695,20 +678,19 @@ export default function AuthSection() {
             {step === 'forgot-password' && (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="forgot-email" className="text-gray-700 dark:text-gray-300 font-medium">Email</Label>
+                  <Label htmlFor="forgot-email" className="text-foreground font-medium">Email</Label>
                   <Input
                     id="forgot-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="h-12 mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-transparent focus:ring-2 rounded-xl"
-                    style={{ '--tw-ring-color': '#00e0ff' } as any}
+                    className="h-12 mt-1 bg-background border-input text-foreground focus:border-transparent focus:ring-2 focus:ring-primary rounded-xl"
                     disabled={loading}
                     onKeyDown={(e) => e.key === 'Enter' && handleForgotPasswordSubmit()}
                     autoFocus
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     We'll send you a link to reset your password
                   </p>
                 </div>
@@ -716,8 +698,7 @@ export default function AuthSection() {
                 <Button
                   onClick={handleForgotPasswordSubmit}
                   disabled={loading}
-                  className="w-full h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: '#00e0ff' }}
+                  className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl hover:brightness-110 transition-all"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send reset link'}
                 </Button>
@@ -728,13 +709,13 @@ export default function AuthSection() {
       </div>
 
       {(step === 'email' || step === 'create-password' || step === 'password' || step === 'forgot-password') && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-6">
+        <p className="text-xs text-muted-foreground text-center mt-6">
           By continuing, you agree to our{' '}
-          <a href="#" className="hover:underline font-medium text-secondary">
+          <a href="#" className="text-secondary hover:underline font-medium">
             Terms
           </a>
           {' '}and{' '}
-          <a href="#" className="hover:underline font-medium text-secondary">
+          <a href="#" className="text-secondary hover:underline font-medium">
             Privacy Policy
           </a>
         </p>

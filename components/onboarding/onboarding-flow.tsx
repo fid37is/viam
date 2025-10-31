@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle } from 'lucide-react'
@@ -20,6 +20,8 @@ interface OnboardingFlowProps {
 
 export default function OnboardingFlow({ user }: OnboardingFlowProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectAfter = searchParams.get('redirect')
   const supabase = createClient()
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('values')
@@ -87,7 +89,9 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
         style: { color: '#16a34a' }
       })
 
-      router.push('/dashboard')
+      // Redirect based on the redirect parameter
+      const destination = redirectAfter || '/dashboard'
+      router.push(destination)
       router.refresh()
     } catch (err: any) {
       toast.error(err.message, {
@@ -105,6 +109,15 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to TrailAm! 👋</h1>
           <p className="text-gray-600">Let's personalize your job search experience</p>
+          
+          {/* Show upgrade notice if redirecting to subscription */}
+          {redirectAfter === '/subscription' && (
+            <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-sm text-gray-700 font-medium">
+                🎉 After setup, you'll be redirected to upgrade to Premium
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Progress Bar */}

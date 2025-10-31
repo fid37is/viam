@@ -1,3 +1,5 @@
+//lib/supabase/types.ts
+
 export type Json =
   | string
   | number
@@ -5,7 +7,23 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
-                                                                
+
+export type InterviewQuestion = {
+  id: string
+  category: string
+  question: string
+  tips: string[]
+  sample_answer?: string
+}
+
+export type InterviewPrep = {
+  questions: InterviewQuestion[]
+  key_topics: string[]
+  preparation_tips: string[]
+  company_insights: string[]
+  generated_at: string
+}
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -41,7 +59,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "activity_log_application_id_fkey"  
+            foreignKeyName: "activity_log_application_id_fkey"
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
@@ -59,12 +77,17 @@ export type Database = {
       applications: {
         Row: {
           applied_date: string | null
+          company_id: string | null
           company_info: Json | null
           company_name: string
           company_website: string | null
           created_at: string | null
           id: string
           interview_dates: Json | null
+          interview_prep_enabled: boolean | null
+          interview_prep_generated_at: string | null
+          interview_prep_notes: string | null
+          interview_questions: Json | null
           job_description: string | null
           job_title: string
           job_url: string
@@ -83,12 +106,17 @@ export type Database = {
         }
         Insert: {
           applied_date?: string | null
+          company_id?: string | null
           company_info?: Json | null
           company_name: string
           company_website?: string | null
           created_at?: string | null
           id?: string
           interview_dates?: Json | null
+          interview_prep_enabled?: boolean | null
+          interview_prep_generated_at?: string | null
+          interview_prep_notes?: string | null
+          interview_questions?: Json | null
           job_description?: string | null
           job_title: string
           job_url: string
@@ -107,12 +135,17 @@ export type Database = {
         }
         Update: {
           applied_date?: string | null
+          company_id?: string | null
           company_info?: Json | null
           company_name?: string
           company_website?: string | null
           created_at?: string | null
           id?: string
           interview_dates?: Json | null
+          interview_prep_enabled?: boolean | null
+          interview_prep_generated_at?: string | null
+          interview_prep_notes?: string | null
+          interview_questions?: Json | null
           job_description?: string | null
           job_title?: string
           job_url?: string
@@ -131,6 +164,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "applications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "applications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -138,6 +178,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      companies: {
+        Row: {
+          company_size: string | null
+          cons: Json | null
+          created_at: string | null
+          culture_summary: string | null
+          description: string | null
+          founded_year: number | null
+          glassdoor_url: string | null
+          headquarters: string | null
+          id: string
+          industry: string | null
+          last_researched_at: string | null
+          linkedin_url: string | null
+          logo_url: string | null
+          name: string
+          overall_rating: number | null
+          pros: Json | null
+          slug: string
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          company_size?: string | null
+          cons?: Json | null
+          created_at?: string | null
+          culture_summary?: string | null
+          description?: string | null
+          founded_year?: number | null
+          glassdoor_url?: string | null
+          headquarters?: string | null
+          id?: string
+          industry?: string | null
+          last_researched_at?: string | null
+          linkedin_url?: string | null
+          logo_url?: string | null
+          name: string
+          overall_rating?: number | null
+          pros?: Json | null
+          slug: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          company_size?: string | null
+          cons?: Json | null
+          created_at?: string | null
+          culture_summary?: string | null
+          description?: string | null
+          founded_year?: number | null
+          glassdoor_url?: string | null
+          headquarters?: string | null
+          id?: string
+          industry?: string | null
+          last_researched_at?: string | null
+          linkedin_url?: string | null
+          logo_url?: string | null
+          name?: string
+          overall_rating?: number | null
+          pros?: Json | null
+          slug?: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -196,12 +302,159 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          tier: 'free' | 'premium'
+          status: 'active' | 'canceled' | 'past_due' | 'trialing'
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          current_period_start: string | null
+          current_period_end: string | null
+          cancel_at_period_end: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tier?: 'free' | 'premium'
+          status?: 'active' | 'canceled' | 'past_due' | 'trialing'
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tier?: 'free' | 'premium'
+          status?: 'active' | 'canceled' | 'past_due' | 'trialing'
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      payment_methods: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_payment_method_id: string
+          brand: string
+          last4: string
+          exp_month: number
+          exp_year: number
+          is_default: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_payment_method_id: string
+          brand: string
+          last4: string
+          exp_month: number
+          exp_year: number
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stripe_payment_method_id?: string
+          brand?: string
+          last4?: string
+          exp_month?: number
+          exp_year?: number
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      invoices: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_invoice_id: string
+          amount: number
+          currency: string
+          status: 'paid' | 'open' | 'void' | 'uncollectible'
+          invoice_pdf: string | null
+          period_start: string
+          period_end: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_invoice_id: string
+          amount: number
+          currency?: string
+          status: 'paid' | 'open' | 'void' | 'uncollectible'
+          invoice_pdf?: string | null
+          period_start: string
+          period_end: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stripe_invoice_id?: string
+          amount?: number
+          currency?: string
+          status?: 'paid' | 'open' | 'void' | 'uncollectible'
+          invoice_pdf?: string | null
+          period_start?: string
+          period_end?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_or_create_company: {
+        Args: { p_name: string; p_website?: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
@@ -218,116 +471,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])  
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {   
+  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-    ? R
-    : never
+  ? R
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+    DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {   
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
+    Insert: infer I
+  }
+  ? I
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {   
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
+    Update: infer U
+  }
+  ? U
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {     
+  | keyof DefaultSchema["Enums"]
+  | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+  : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]    
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["CompositeTypes"]
+  | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+  : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   public: {
@@ -335,15 +588,11 @@ export const Constants = {
   },
 } as const
 
-// Helper types for better type inference
-export type Profile = Tables<'profiles'>
-export type Application = Tables<'applications'>
-export type ActivityLog = Tables<'activity_log'>
-
-export type InsertProfile = TablesInsert<'profiles'>
-export type InsertApplication = TablesInsert<'applications'>
-export type InsertActivityLog = TablesInsert<'activity_log'>
-
-export type UpdateProfile = TablesUpdate<'profiles'>
-export type UpdateApplication = TablesUpdate<'applications'>
-export type UpdateActivityLog = TablesUpdate<'activity_log'>
+// Helper type exports
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type Subscription = Database['public']['Tables']['subscriptions']['Row']
+export type PaymentMethod = Database['public']['Tables']['payment_methods']['Row']
+export type Invoice = Database['public']['Tables']['invoices']['Row']
+export type Application = Database['public']['Tables']['applications']['Row']
+export type Company = Database['public']['Tables']['companies']['Row']
+export type ActivityLog = Database['public']['Tables']['activity_log']['Row']

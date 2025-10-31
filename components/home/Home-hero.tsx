@@ -1,10 +1,42 @@
 'use client'
 
 import AuthSection from './auth-section';
-import { Target, BarChart3, Bell, Search, TrendingUp, Zap } from 'lucide-react'
+import { Target, BarChart3, Bell, Search, TrendingUp, Zap, Check } from 'lucide-react'
 import HomeNav from './home-nav'
 
 export default function HomeHero() {
+  const handleUpgradeClick = () => {
+    // Add upgrade parameter to URL
+    const url = new URL(window.location.href)
+    url.searchParams.set('upgrade', 'true')
+    window.history.pushState({}, '', url)
+    
+    // Dispatch event immediately (before scroll)
+    window.dispatchEvent(new CustomEvent('upgrade-intent'))
+    
+    // Smooth scroll to auth section at top
+    window.scrollTo({ 
+      top: 0, 
+      behavior: 'smooth' 
+    })
+  }
+
+  const handleFreeClick = () => {
+    // Remove upgrade parameter if it exists
+    const url = new URL(window.location.href)
+    url.searchParams.delete('upgrade')
+    window.history.pushState({}, '', url)
+    
+    // Dispatch event immediately (before scroll)
+    window.dispatchEvent(new CustomEvent('free-signup'))
+    
+    // Smooth scroll to top
+    window.scrollTo({ 
+      top: 0, 
+      behavior: 'smooth' 
+    })
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <style dangerouslySetInnerHTML={{__html: `
@@ -18,6 +50,21 @@ export default function HomeHero() {
         }
         .animate-pulse-subtle {
           animation: pulse-subtle 3s ease-in-out infinite;
+        }
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        
+        html {
+          scroll-behavior: smooth;
         }
       `}} />
       
@@ -125,6 +172,85 @@ export default function HomeHero() {
         </div>
       </div>
 
+      {/* Pricing Section */}
+      <div id="pricing" className="py-20 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-foreground mb-4">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Start free, upgrade when you're ready to go unlimited
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Free Tier */}
+            <div className="bg-card rounded-3xl border-2 border-border p-8 hover:border-primary/30 transition-all duration-300 hover:shadow-lg group">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
+                <div className="flex items-baseline mb-4">
+                  <span className="text-5xl font-bold text-foreground">$0</span>
+                  <span className="text-muted-foreground ml-2">/month</span>
+                </div>
+                <p className="text-muted-foreground">Perfect for getting started</p>
+              </div>
+
+              <ul className="space-y-4 mb-8">
+                <BenefitItem text="Track up to 10 applications" />
+                <BenefitItem text="AI job fit analysis" />
+                <BenefitItem text="Company research & insights" />
+                <BenefitItem text="Interview prep questions" />
+                <BenefitItem text="Application status tracking" />
+                <BenefitItem text="Smart notifications" />
+                <BenefitItem text="Delete after 30 days only" muted />
+              </ul>
+
+              <button 
+                onClick={handleFreeClick}
+                className="w-full py-3 rounded-xl border-2 border-border text-foreground font-semibold hover:bg-muted transition-all duration-300 group-hover:border-primary/50"
+              >
+                Get Started Free
+              </button>
+            </div>
+
+            {/* Premium Tier */}
+            <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl border-2 border-primary p-8 hover:shadow-2xl transition-all duration-300 relative overflow-hidden group animate-float">
+              {/* Popular Badge */}
+              <div className="absolute top-6 right-6 bg-secondary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                Recommended
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">Premium</h3>
+                <div className="flex items-baseline mb-4">
+                  <span className="text-5xl font-bold text-foreground">$12</span>
+                  <span className="text-muted-foreground ml-2">/month</span>
+                </div>
+                <p className="text-muted-foreground">For serious job seekers</p>
+              </div>
+
+              <ul className="space-y-4 mb-8">
+                <BenefitItem text="Unlimited applications" premium />
+                <BenefitItem text="All AI features unlocked" premium />
+                <BenefitItem text="Advanced company insights" premium />
+                <BenefitItem text="Priority interview prep" premium />
+                <BenefitItem text="Instant delete anytime" premium />
+                <BenefitItem text="Application analytics" premium />
+                <BenefitItem text="Export & backup data" premium />
+              </ul>
+
+              <button 
+                onClick={handleUpgradeClick}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl group-hover:scale-105"
+              >
+                Start With Premium
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Testimonials Section */}
       <div id="testimonials" className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -167,9 +293,7 @@ export default function HomeHero() {
             Join thousands of job seekers who found their perfect role with TrailAm
           </p>
           <button
-            onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
+            onClick={handleFreeClick}
             className="bg-primary text-primary-foreground hover:opacity-90 px-8 py-4 rounded-lg text-lg font-semibold transition-opacity"
           >
             Get Started Free
@@ -191,7 +315,7 @@ export default function HomeHero() {
               <h4 className="font-semibold mb-4 text-foreground">Product</h4>
               <ul className="space-y-2 text-muted-foreground">
                 <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Pricing</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">Pricing</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
               </ul>
             </div>
@@ -256,5 +380,14 @@ function TestimonialCard({ quote, author, role }: { quote: string; author: strin
         <p className="text-sm text-muted-foreground">{role}</p>
       </div>
     </div>
+  )
+}
+
+function BenefitItem({ text, muted = false, premium = false }: { text: string; muted?: boolean; premium?: boolean }) {
+  return (
+    <li className="flex items-start gap-3">
+      <Check className={`w-5 h-5 mt-0.5 flex-shrink-0 ${premium ? 'text-primary' : muted ? 'text-muted-foreground' : 'text-foreground'}`} />
+      <span className={`${muted ? 'text-muted-foreground' : 'text-foreground'}`}>{text}</span>
+    </li>
   )
 }

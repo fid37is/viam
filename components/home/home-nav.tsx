@@ -9,34 +9,36 @@ export default function HomeNav() {
   const { theme, toggleTheme } = useTheme()
 
   return (
-    <nav className="bg-background border-b border-border sticky top-0 z-50 transition-colors backdrop-blur-sm bg-background/95">
+    <nav className="bg-background border-b border-border sticky top-0 z-50 transition-colors backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-[-12px]">
-            <Image 
-              src="/trailam-logo.svg" 
-              alt="TrailAm Logo" 
-              width={15} 
-              height={15}
-              className="w-40 pt-8"
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/trailam-logo.svg"
+              alt="TrailAm Logo"
+              width={56}
+              height={56}
+              className="w-24 h-24"
             />
-            <span className="text-2xl font-bold text-foreground">TrailAm</span>
+            <span className="text-2xl font-bold text-foreground leading-none">
+              TrailAm
+            </span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            <a 
-              href="#features" 
+            <a
+              href="#features"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Features
             </a>
-            <a 
-              href="#testimonials" 
+            <a
+              href="#testimonials"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Testimonials
             </a>
-            
+
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
@@ -71,7 +73,7 @@ export default function HomeNav() {
                 <Moon className="w-5 h-5 text-accent" />
               )}
             </button>
-            
+
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"

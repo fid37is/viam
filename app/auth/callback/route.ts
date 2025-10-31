@@ -5,6 +5,8 @@ import { cookies } from 'next/headers'
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const redirectParam = requestUrl.searchParams.get('redirect')
+  const isNewUser = requestUrl.searchParams.get('new_user')
   const origin = requestUrl.origin
 
   if (code) {
@@ -54,19 +56,32 @@ export async function GET(request: Request) {
         .eq('id', user.id)
         .single()
 
-      // If profile doesn't exist or was just created (within last 5 seconds), redirect to onboarding
-      if (!profile || !profile.onboarding_completed) {
-        const isNewUser = !profile || 
-          (new Date().getTime() - new Date(profile.created_at || 0).getTime()) < 5000
+      // Check if user has subscription intent from metadata
+      const hasSubscriptionIntent = user.user_metadata?.intent_upgrade || redirectParam === '/subscription'
 
-        if (isNewUser || !profile?.onboarding_completed) {
-          return NextResponse.redirect(`${origin}/onboarding`)
+      // Determine if this is a new user
+      const isNewlyCreatedUser = isNewUser === 'true' || 
+        !profile || 
+        (new Date().getTime() - new Date(profile.created_at || 0).getTime()) < 5000
+
+      // If new user or onboarding not completed, redirect to onboarding
+      if (isNewlyCreatedUser || !profile?.onboarding_completed) {
+        // Preserve subscription intent through onboarding
+        if (hasSubscriptionIntent) {
+          return NextResponse.redirect(`${origin}/onboarding?redirect=/subscription`)
         }
+        return NextResponse.redirect(`${origin}/onboarding`)
       }
-    }
 
-    // Existing user with completed onboarding - redirect to dashboard
-    return NextResponse.redirect(`${origin}/dashboard`)
+      // Existing user with completed onboarding
+      // If they have subscription intent, redirect to subscription page
+      if (hasSubscriptionIntent) {
+        return NextResponse.redirect(`${origin}/subscription`)
+      }
+
+      // Default redirect to dashboard for returning users
+      return NextResponse.redirect(`${origin}/dashboard`)
+    }
   }
 
   // No code - redirect to home

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Application } from '@/lib/supabase/types'
+import { Database } from '@/lib/supabase/types'
 import { Button } from '@/components/ui/button'
 import { 
   ArrowLeft, 
@@ -16,12 +16,18 @@ import {
   CheckCircle,
   AlertCircle,
   Lightbulb,
-  Sparkles
+  Sparkles,
+  FileText,
+  Brain
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+
+type Application = Database['public']['Tables']['applications']['Row'] & {
+  company?: Database['public']['Tables']['companies']['Row']
+}
 
 interface ApplicationDetailProps {
   application: Application
@@ -166,7 +172,18 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 {application.job_title}
               </h1>
-              <p className="text-xl text-muted-foreground mb-3">{application.company_name}</p>
+              <div className="flex items-center gap-2 mb-3">
+                {application.company?.slug ? (
+                  <Link 
+                    href={`/dashboard/companies/${application.company.slug}`}
+                    className="text-xl text-primary hover:opacity-80 hover:underline transition-opacity"
+                  >
+                    {application.company_name}
+                  </Link>
+                ) : (
+                  <p className="text-xl text-muted-foreground">{application.company_name}</p>
+                )}
+              </div>
               
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 {application.location && (
@@ -175,10 +192,12 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                     <span>{application.location}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>Added {formatDate(application.created_at)}</span>
-                </div>
+                {application.created_at && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>Added {formatDate(application.created_at)}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -199,7 +218,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-foreground"
                 >
                   <Edit className="w-4 h-4" />
-                  Edit Application
+                  Edit
                 </button>
                 <button
                   onClick={handleDelete}
@@ -207,7 +226,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-destructive"
                 >
                   <Trash2 className="w-4 h-4" />
-                  {deleting ? 'Deleting...' : 'Delete Application'}
+                  {deleting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             )}
@@ -235,10 +254,22 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                 </span>
               )}
             </div>
+            
+            {/* Interview Prep Button - Show when status is "interviewing" */}
+            {application.status === 'interviewing' && application.interview_prep_enabled && (
+              <Link href={`/dashboard/applications/${application.id}/interview-prep`} className="block mt-4">
+                <Button
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl"
+                >
+                  <Brain className="w-5 h-5 mr-2" />
+                  Start Interview Prep
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Match Analysis */}
-          {application.match_score && matchAnalysis && (
+          {application.match_score !== null && matchAnalysis && (
             <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
               <div className="flex items-center gap-2 mb-6">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -308,6 +339,43 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
             </div>
           )}
 
+          {/* Company Info Card */}
+          {application.company && (
+            <Link href={`/dashboard/companies/${application.company.slug}`}>
+              <div className="bg-card rounded-2xl shadow-sm p-6 border border-border hover:border-primary transition-colors cursor-pointer">
+                <div className="flex items-center gap-2 mb-4">
+                  <Building2 className="w-5 h-5 text-muted-foreground" />
+                  <h2 className="text-lg font-semibold text-foreground">Company Information</h2>
+                  <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto" />
+                </div>
+                
+                {application.company.description && (
+                  <p className="text-muted-foreground mb-4 line-clamp-3">
+                    {application.company.description}
+                  </p>
+                )}
+                
+                <div className="flex flex-wrap gap-3 text-sm">
+                  {application.company.industry && (
+                    <span className="px-3 py-1 bg-muted text-foreground rounded-full">
+                      {application.company.industry}
+                    </span>
+                  )}
+                  {application.company.company_size && (
+                    <span className="px-3 py-1 bg-muted text-foreground rounded-full">
+                      {application.company.company_size}
+                    </span>
+                  )}
+                  {application.company.overall_rating !== null && (
+                    <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full font-medium">
+                      ★ {application.company.overall_rating.toFixed(1)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Link>
+          )}
+
           {/* Job Description - Now Beautifully Formatted */}
           {application.job_description && (
             <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
@@ -346,7 +414,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Match Score */}
-          {application.match_score && (
+          {application.match_score !== null && (
             <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
               <h3 className="text-sm font-medium text-muted-foreground mb-3">Match Score</h3>
               <div className="text-center">
@@ -375,6 +443,25 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Details
               </Button>
+              
+              {application.interview_prep_enabled && (
+                <Link href={`/dashboard/applications/${application.id}/interview-prep`} className="block">
+                  <Button variant="outline" className="w-full justify-start rounded-xl">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Interview Prep
+                  </Button>
+                </Link>
+              )}
+              
+              {application.company && (
+                <Link href={`/dashboard/companies/${application.company.slug}`} className="block">
+                  <Button variant="outline" className="w-full justify-start rounded-xl">
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Company Info
+                  </Button>
+                </Link>
+              )}
+              
               {application.job_url && (
                 <a href={application.job_url} target="_blank" rel="noopener noreferrer" className="block">
                   <Button variant="outline" className="w-full justify-start rounded-xl">
@@ -390,13 +477,15 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
             <h3 className="text-sm font-medium text-muted-foreground mb-4">Timeline</h3>
             <div className="space-y-4">
-              <div className="flex gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Added to TrailAm</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(application.created_at)}</p>
+              {application.created_at && (
+                <div className="flex gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Added to TrailAm</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(application.created_at)}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               {application.applied_date && (
                 <div className="flex gap-3">
                   <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
