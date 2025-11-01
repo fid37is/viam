@@ -113,24 +113,24 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
       {/* AI Insights Modal */}
       {showAIInsights && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl shadow-2xl border border-border max-w-2xl w-full max-h-[80vh] overflow-hidden">
+          <div className="bg-card rounded-3xl shadow-2xl border border-border w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 border-b border-border">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+            <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 sm:p-6 border-b border-border flex-shrink-0">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                     <Sparkles className="w-6 h-6 text-primary animate-pulse" />
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground">AI Career Advisor</h2>
-                    <p className="text-sm text-muted-foreground">Personalized insights for your job search</p>
+                  <div className="min-w-0">
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground truncate">AI Career Advisor</h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">Personalized insights for your job search</p>
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowAIInsights(false)}
-                  className="hover:bg-accent"
+                  className="hover:bg-accent flex-shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -138,11 +138,11 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-                  <p className="text-muted-foreground">Analyzing your job search patterns...</p>
+                  <p className="text-muted-foreground text-center text-sm">Analyzing your job search patterns...</p>
                 </div>
               ) : aiInsights ? (
                 <div className="space-y-4">
@@ -152,9 +152,9 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
                       const title = line.replace(/━━━/g, '').trim()
                       return (
                         <div key={index} className="pt-6 first:pt-0">
-                          <div className="flex items-center gap-3 mb-4">
+                          <div className="flex items-center gap-2 sm:gap-3 mb-4">
                             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-                            <h3 className="text-base font-semibold text-primary uppercase tracking-wide">
+                            <h3 className="text-xs sm:text-base font-semibold text-primary uppercase tracking-wide whitespace-nowrap">
                               {title}
                             </h3>
                             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
@@ -166,9 +166,9 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
                     // Bullet points
                     if (line.trim().startsWith('•')) {
                       return (
-                        <div key={index} className="flex gap-3 text-foreground/90 leading-relaxed pl-2">
-                          <span className="text-primary mt-1.5">•</span>
-                          <span className="flex-1">{line.replace(/^\s*•\s*/, '')}</span>
+                        <div key={index} className="flex gap-2 sm:gap-3 text-foreground/90 leading-relaxed pl-2">
+                          <span className="text-primary mt-1 flex-shrink-0">•</span>
+                          <span className="flex-1 text-sm sm:text-base">{line.replace(/^\s*•\s*/, '')}</span>
                         </div>
                       )
                     }
@@ -180,7 +180,7 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
                     
                     // Regular paragraphs
                     return (
-                      <p key={index} className="text-foreground/90 leading-relaxed">
+                      <p key={index} className="text-foreground/90 leading-relaxed text-sm sm:text-base">
                         {line}
                       </p>
                     )
@@ -190,7 +190,7 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-border bg-muted/30">
+            <div className="p-3 sm:p-4 border-t border-border bg-muted/30 flex-shrink-0">
               <p className="text-xs text-muted-foreground text-center">
                 💡 These insights are AI-generated based on your application data
               </p>
@@ -199,7 +199,7 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
         </div>
       )}
 
-      {/* Overview Stats - Compact Grid */}
+      {/* Overview Stats - Responsive Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           icon={<Target className="w-5 h-5" />}
@@ -223,23 +223,24 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      {/* Application Trend & Average Match */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Application Trend */}
         <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
           <h2 className="text-lg font-semibold text-foreground mb-4">Application Activity</h2>
-          <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-xl ${isPositiveTrend ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className={`p-3 rounded-xl flex-shrink-0 ${isPositiveTrend ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
               {isPositiveTrend ? (
                 <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
               ) : (
                 <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
               )}
             </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">
+            <div className="flex-1">
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">
                 {recentApps} applications
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mt-1">
                 Last 7 days • {isPositiveTrend ? '+' : ''}{trendPercentage}% from previous week
               </p>
             </div>
@@ -250,8 +251,8 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
         {applications.some(app => app.match_score) && (
           <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
             <h2 className="text-lg font-semibold text-foreground mb-4">Average Match Score</h2>
-            <div className="flex items-center gap-4">
-              <div className="text-5xl font-bold text-primary">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="text-4xl sm:text-5xl font-bold text-primary">
                 {averageMatchScore}%
               </div>
               <p className="text-sm text-muted-foreground">
@@ -262,7 +263,8 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      {/* Status Breakdown & Top Locations */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status Breakdown */}
         <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
           <h2 className="text-lg font-semibold text-foreground mb-6">Status Breakdown</h2>
@@ -281,8 +283,8 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
             <div className="space-y-3">
               {topLocations.map(([location, count]) => (
                 <div key={location} className="flex items-center justify-between py-2">
-                  <span className="text-foreground font-medium">{location}</span>
-                  <span className="text-sm font-medium text-muted-foreground px-3 py-1 bg-muted rounded-full">
+                  <span className="text-foreground font-medium text-sm truncate">{location}</span>
+                  <span className="text-sm font-medium text-muted-foreground px-3 py-1 bg-muted rounded-full flex-shrink-0">
                     {count}
                   </span>
                 </div>
@@ -295,11 +297,11 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
       {/* Footer Note */}
       {totalApplications > 0 && (
         <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-6 border border-primary/20">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="p-3 rounded-xl bg-primary/20 flex-shrink-0">
               <Sparkles className="w-6 h-6 text-primary" />
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="font-semibold text-foreground mb-1">Need personalized advice?</h3>
               <p className="text-sm text-muted-foreground">
                 Click the AI Advisor icon at the top right to get intelligent insights and recommendations for your job search
@@ -311,14 +313,14 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
 
       {/* Empty State */}
       {totalApplications === 0 && (
-        <div className="bg-card rounded-2xl shadow-sm p-12 border border-border text-center">
+        <div className="bg-card rounded-2xl shadow-sm p-8 sm:p-12 border border-border text-center">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Target className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
             No data yet
           </h3>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-muted-foreground">
             Start tracking applications to see your insights
           </p>
         </div>
@@ -337,14 +339,14 @@ function StatCard({ icon, label, value }: {
   value: string
 }) {
   return (
-    <div className="bg-card rounded-xl shadow-sm p-5 border border-border hover:border-primary/50 transition-colors">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+    <div className="bg-card rounded-xl shadow-sm p-4 sm:p-5 border border-border hover:border-primary/50 transition-colors">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="p-2 rounded-lg bg-primary/10 text-primary flex-shrink-0">
           {icon}
         </div>
-        <div className="text-3xl font-bold text-foreground">{value}</div>
+        <div className="text-2xl sm:text-3xl font-bold text-foreground text-right">{value}</div>
       </div>
-      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="text-xs sm:text-sm text-muted-foreground">{label}</div>
     </div>
   )
 }
@@ -361,7 +363,7 @@ function StatusBar({ label, count, total, color }: {
     <div>
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-foreground">{label}</span>
-        <span className="text-sm text-muted-foreground">{count} ({percentage}%)</span>
+        <span className="text-xs sm:text-sm text-muted-foreground">{count} ({percentage}%)</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div 

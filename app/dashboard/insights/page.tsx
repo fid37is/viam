@@ -22,8 +22,8 @@ export default async function InsightsPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-start justify-between">
-        <div>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+        <div className="flex-1 min-w-0">
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Insights
           </h1>
@@ -32,7 +32,9 @@ export default async function InsightsPage() {
           </p>
         </div>
 
-        <AIAdvisorButton applications={applications || []} />
+        <div className="flex-shrink-0 w-full sm:w-auto">
+          <AIAdvisorButton applications={applications || []} />
+        </div>
       </div>
 
       <InsightsDashboard applications={applications || []} />

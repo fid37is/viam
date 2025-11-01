@@ -6,7 +6,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, ChevronRight, AlertCircle, TrendingUp, Zap, Clock } from 'lucide-react'
+import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -15,13 +16,12 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Fetch user's applications
+  // Fetch all applications
   const { data: applications } = await supabase
     .from('applications')
     .select('*')
     .eq('user_id', user!.id)
     .order('created_at', { ascending: false })
-    .limit(10)
 
   // Fetch profile
   const { data: profile } = await supabase
@@ -30,6 +30,7 @@ export default async function DashboardPage() {
     .eq('id', user!.id)
     .single()
 
+  // Calculate stats
   const stats = {
     total: applications?.length || 0,
     applied: applications?.filter(a => a.status === 'applied').length || 0,
@@ -37,84 +38,226 @@ export default async function DashboardPage() {
     offers: applications?.filter(a => a.status === 'offer').length || 0,
   }
 
+  // Identify action items
+  const oldApplications = applications?.filter(app => {
+    if (app.status !== 'applied' || !app.created_at) return false
+    const daysOld = Math.floor((Date.now() - new Date(app.created_at).getTime()) / (1000 * 60 * 60 * 24))
+    return daysOld > 7
+  }) || []
+
+  const highMatchApplications = applications?.filter(app => app.match_score && app.match_score >= 80).slice(0, 3) || []
+
+  const notAppliedCount = applications?.filter(a => a.status === 'not_applied').length || 0
+
+  // Recent activity (last 5 apps added)
+  const recentActivity = applications?.slice(0, 5) || []
+
+  const hasActionItems = oldApplications.length > 0 || notAppliedCount > 0 || highMatchApplications.length > 0
+
   return (
     <div className="space-y-6">
-      {/* Welcome Section with Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Welcome Card */}
-        <div className="lg:col-span-2 bg-card rounded-lg shadow-sm border border-border p-6">
-          <h1 className="text-3xl font-bold text-foreground">
-            Welcome back, {profile?.full_name || 'there'}!
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Track your job applications and discover the perfect fit
-          </p>
-        </div>
-
-        {/* Quick Stats - Compact Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Total" value={stats.total} />
-          <StatCard label="Applied" value={stats.applied} />
-          <StatCard label="Interviewing" value={stats.interviewing} />
-          <StatCard label="Offers" value={stats.offers} />
-        </div>
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl shadow-sm border border-primary/20 p-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          Welcome back, {profile?.full_name || 'there'}!
+        </h1>
+        <p className="text-muted-foreground">
+          Track your job applications and land your next role
+        </p>
       </div>
 
-      {/* Recent Applications */}
-      <div className="bg-card rounded-lg shadow-sm border border-border">
-        <div className="p-6 border-b border-border flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-foreground">
-            Recent Applications
-          </h2>
-          <Link href="/dashboard/applications/new">
-            <Button className="bg-primary text-primary-foreground hover:opacity-90">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Application
-            </Button>
-          </Link>
-        </div>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Total" value={stats.total} />
+        <StatCard label="Applied" value={stats.applied} />
+        <StatCard label="Interviewing" value={stats.interviewing} />
+        <StatCard label="Offers" value={stats.offers} />
+      </div>
 
-        <div className="p-6">
-          {!applications || applications.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                No applications yet. Start tracking your job search!
+      {/* Action Items */}
+      {hasActionItems && (
+        <div className="bg-amber-50 dark:bg-amber-950/20 rounded-2xl shadow-sm border border-amber-200 dark:border-amber-900/40 p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex-shrink-0">
+              <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-3">
+                Action Items
+              </h2>
+              <div className="space-y-2">
+                {oldApplications.length > 0 && (
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <span className="text-sm text-amber-900 dark:text-amber-100">
+                        <span className="font-semibold">{oldApplications.length}</span> application{oldApplications.length !== 1 ? 's' : ''} waiting 7+ days for response
+                      </span>
+                    </div>
+                    <Link href="/dashboard/applications?status=applied">
+                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30">
+                        Follow up
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+                {notAppliedCount > 0 && (
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <span className="text-sm text-amber-900 dark:text-amber-100">
+                        <span className="font-semibold">{notAppliedCount}</span> position{notAppliedCount !== 1 ? 's' : ''} ready to apply to
+                      </span>
+                    </div>
+                    <Link href="/dashboard/applications?status=not_applied">
+                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30">
+                        Apply now
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+                {highMatchApplications.length > 0 && (
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <span className="text-sm text-amber-900 dark:text-amber-100">
+                        <span className="font-semibold">{highMatchApplications.length}</span> high-match position{highMatchApplications.length !== 1 ? 's' : ''} to prioritize
+                      </span>
+                    </div>
+                    <Link href="/dashboard/applications?sort=match">
+                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30">
+                        View
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Recent Activity
+          </h2>
+
+          {recentActivity.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground text-sm mb-4">
+                No activity yet
               </p>
               <Link href="/dashboard/applications/new">
                 <Button className="bg-primary text-primary-foreground hover:opacity-90">
-                  Add Your First Application
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Application
                 </Button>
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
-              {applications.map((app) => (
+            <div className="space-y-3">
+              {recentActivity.map((app) => (
                 <Link
                   key={app.id}
                   href={`/dashboard/applications/${app.id}`}
-                  className="block p-4 border border-border rounded-lg hover:bg-accent/5 transition"
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/5 transition"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-foreground">
-                        {app.job_title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{app.company_name}</p>
-                    </div>
-                    {app.match_score && (
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-primary">
-                          {app.match_score}%
-                        </div>
-                        <div className="text-xs text-muted-foreground">Match</div>
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {app.job_title}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {app.company_name}
+                        </p>
                       </div>
-                    )}
+                      {app.match_score && (
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-xs font-bold text-primary">
+                            {app.match_score}%
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Added {formatDate(app.created_at)}
+                    </p>
                   </div>
                 </Link>
               ))}
             </div>
           )}
         </div>
+
+        {/* High Match Applications */}
+        {highMatchApplications.length > 0 && (
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
+              Top Matches
+            </h2>
+            <div className="space-y-3">
+              {highMatchApplications.map((app) => (
+                <Link
+                  key={app.id}
+                  href={`/dashboard/applications/${app.id}`}
+                  className="p-3 rounded-lg border border-border hover:border-primary/50 transition"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {app.job_title}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {app.company_name}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-lg font-bold text-primary">
+                        {app.match_score}%
+                      </div>
+                      <span
+                        className={`inline-block text-xs font-medium px-2 py-1 rounded-full mt-1 ${getStatusColor(
+                          app.status
+                        )}`}
+                      >
+                        {getStatusLabel(app.status)}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Navigation */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <Link href="/dashboard/applications">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-4 hover:border-primary/50 transition text-center">
+            <div className="text-2xl font-bold text-foreground mb-2">{stats.total}</div>
+            <p className="text-sm text-muted-foreground">View All Applications</p>
+          </div>
+        </Link>
+        <Link href="/dashboard/applications/new">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-4 hover:border-primary/50 transition text-center">
+            <Plus className="w-6 h-6 text-primary mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Add Application</p>
+          </div>
+        </Link>
+        <Link href="/dashboard/insights">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-4 hover:border-primary/50 transition text-center">
+            <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">View Insights</p>
+          </div>
+        </Link>
       </div>
     </div>
   )
@@ -122,11 +265,9 @@ export default async function DashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-card rounded-lg shadow-sm border border-border p-4">
-      <div className="text-xs font-medium text-muted-foreground mb-1">{label}</div>
-      <div className="text-2xl font-bold text-foreground">
-        {value}
-      </div>
+    <div className="bg-card rounded-xl shadow-sm border border-border p-4 hover:border-primary/50 transition-colors">
+      <div className="text-sm text-muted-foreground mb-1">{label}</div>
+      <div className="text-3xl font-bold text-foreground">{value}</div>
     </div>
   )
 }

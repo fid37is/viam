@@ -313,7 +313,7 @@ export default function AuthSection() {
       case 'verify':
         return { title: 'Never give up', subtitle: 'Check your email' }
       case 'create-password':
-        return { title: 'Join the Trailams', subtitle: 'Create your account' }
+        return { title: 'Join the Owtras', subtitle: 'Create your account' }
       case 'password':
         return { title: 'Loving it right?', subtitle: 'Welcome back' }
       case 'forgot-password':

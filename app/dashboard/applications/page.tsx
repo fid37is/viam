@@ -23,9 +23,18 @@ export default async function ApplicationsPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
+  // Fetch user subscription tier
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('tier')
+    .eq('user_id', user.id)
+    .single()
+
   if (error) {
     console.error('Error fetching applications:', error)
   }
+
+  const userPlan = (subscription?.tier || 'free') as 'free' | 'premium'
 
   return (
     <div>
@@ -49,7 +58,7 @@ export default async function ApplicationsPage() {
         </Link>
       </div>
 
-      <ApplicationsList initialApplications={applications || []} />
+      <ApplicationsList initialApplications={applications || []} userPlan={userPlan} />
     </div>
   )
 }

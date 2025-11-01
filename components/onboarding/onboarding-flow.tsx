@@ -107,7 +107,7 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to TrailAm! 👋</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Owtras! 👋</h1>
           <p className="text-gray-600">Let's personalize your job search experience</p>
           
           {/* Show upgrade notice if redirecting to subscription */}
