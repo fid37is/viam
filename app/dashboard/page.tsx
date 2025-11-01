@@ -57,11 +57,11 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl shadow-sm border border-primary/20 p-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl shadow-sm border border-primary/20 p-4 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Welcome back, {profile?.full_name || 'there'}!
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Track your job applications and land your next role
         </p>
       </div>
@@ -76,26 +76,26 @@ export default async function DashboardPage() {
 
       {/* Action Items */}
       {hasActionItems && (
-        <div className="bg-amber-50 dark:bg-amber-950/20 rounded-2xl shadow-sm border border-amber-200 dark:border-amber-900/40 p-6">
-          <div className="flex items-start gap-4">
+        <div className="bg-amber-50 dark:bg-amber-950/20 rounded-2xl shadow-sm border border-amber-200 dark:border-amber-900/40 p-4 sm:p-6">
+          <div className="flex items-start gap-3 sm:gap-4">
             <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex-shrink-0">
               <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-3">
+              <h2 className="text-base sm:text-lg font-semibold text-amber-900 dark:text-amber-100 mb-3">
                 Action Items
               </h2>
               <div className="space-y-2">
                 {oldApplications.length > 0 && (
-                  <div className="flex items-center justify-between p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      <span className="text-sm text-amber-900 dark:text-amber-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
+                    <div className="flex items-start sm:items-center gap-2 min-w-0">
+                      <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+                      <span className="text-sm text-amber-900 dark:text-amber-100 min-w-0">
                         <span className="font-semibold">{oldApplications.length}</span> application{oldApplications.length !== 1 ? 's' : ''} waiting 7+ days for response
                       </span>
                     </div>
                     <Link href="/dashboard/applications?status=applied">
-                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30">
+                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 flex-shrink-0">
                         Follow up
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
@@ -103,15 +103,15 @@ export default async function DashboardPage() {
                   </div>
                 )}
                 {notAppliedCount > 0 && (
-                  <div className="flex items-center justify-between p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      <span className="text-sm text-amber-900 dark:text-amber-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
+                    <div className="flex items-start sm:items-center gap-2 min-w-0">
+                      <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+                      <span className="text-sm text-amber-900 dark:text-amber-100 min-w-0">
                         <span className="font-semibold">{notAppliedCount}</span> position{notAppliedCount !== 1 ? 's' : ''} ready to apply to
                       </span>
                     </div>
                     <Link href="/dashboard/applications?status=not_applied">
-                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30">
+                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 flex-shrink-0">
                         Apply now
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
@@ -119,15 +119,15 @@ export default async function DashboardPage() {
                   </div>
                 )}
                 {highMatchApplications.length > 0 && (
-                  <div className="flex items-center justify-between p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      <span className="text-sm text-amber-900 dark:text-amber-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-white dark:bg-background rounded-lg border border-amber-100 dark:border-amber-900/30">
+                    <div className="flex items-start sm:items-center gap-2 min-w-0">
+                      <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+                      <span className="text-sm text-amber-900 dark:text-amber-100 min-w-0">
                         <span className="font-semibold">{highMatchApplications.length}</span> high-match position{highMatchApplications.length !== 1 ? 's' : ''} to prioritize
                       </span>
                     </div>
                     <Link href="/dashboard/applications?sort=match">
-                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30">
+                      <Button size="sm" variant="ghost" className="text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 flex-shrink-0">
                         View
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
@@ -140,16 +140,16 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Recent Activity
           </h2>
 
           {recentActivity.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground text-sm mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 No activity yet
               </p>
               <Link href="/dashboard/applications/new">
@@ -165,12 +165,12 @@ export default async function DashboardPage() {
                 <Link
                   key={app.id}
                   href={`/dashboard/applications/${app.id}`}
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/5 transition"
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/5 transition min-w-0"
                 >
                   <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3">
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
                           {app.job_title}
                         </p>
@@ -186,7 +186,7 @@ export default async function DashboardPage() {
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-2">
                       Added {formatDate(app.created_at)}
                     </p>
                   </div>
@@ -197,7 +197,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* High Match Applications */}
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Top Matches
           </h2>
@@ -207,9 +207,9 @@ export default async function DashboardPage() {
                 <Link
                   key={app.id}
                   href={`/dashboard/applications/${app.id}`}
-                  className="p-3 rounded-lg border border-border hover:border-primary/50 transition"
+                  className="p-3 rounded-lg border border-border hover:border-primary/50 transition min-w-0"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
                         {app.job_title}
@@ -248,23 +248,23 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick Navigation */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <Link href="/dashboard/applications">
-          <div className="bg-card rounded-xl shadow-sm border border-border p-4 hover:border-primary/50 transition text-center">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-3 sm:p-4 hover:border-primary/50 transition text-center min-w-0">
             <div className="text-2xl font-bold text-foreground mb-2">{stats.total}</div>
-            <p className="text-sm text-muted-foreground">View All Applications</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">View All Applications</p>
           </div>
         </Link>
         <Link href="/dashboard/applications/new">
-          <div className="bg-card rounded-xl shadow-sm border border-border p-4 hover:border-primary/50 transition text-center">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-3 sm:p-4 hover:border-primary/50 transition text-center">
             <Plus className="w-6 h-6 text-primary mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Add Application</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Add Application</p>
           </div>
         </Link>
         <Link href="/dashboard/insights">
-          <div className="bg-card rounded-xl shadow-sm border border-border p-4 hover:border-primary/50 transition text-center">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-3 sm:p-4 hover:border-primary/50 transition text-center">
             <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">View Insights</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">View Insights</p>
           </div>
         </Link>
       </div>
@@ -275,8 +275,8 @@ export default async function DashboardPage() {
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="bg-card rounded-xl shadow-sm border border-border p-4 hover:border-primary/50 transition-colors">
-      <div className="text-sm text-muted-foreground mb-1">{label}</div>
-      <div className="text-3xl font-bold text-foreground">{value}</div>
+      <div className="text-xs sm:text-sm text-muted-foreground mb-1">{label}</div>
+      <div className="text-2xl sm:text-3xl font-bold text-foreground">{value}</div>
     </div>
   )
 }

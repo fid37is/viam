@@ -32,20 +32,20 @@ export default function ValuesStep({ selectedValues, onValuesChange }: ValuesSte
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
           What matters most to you?
         </h2>
-        <p className="text-gray-600">
+        <p className="text-xs sm:text-base text-gray-600">
           Select at least 3 values that are important in your next role
         </p>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-xs sm:text-sm text-gray-500 mt-2">
           {selectedValues.length} of 5 selected
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {VALUES.map((value) => {
           const isSelected = selectedValues.includes(value.id)
           const isDisabled = !isSelected && selectedValues.length >= 5
@@ -56,7 +56,7 @@ export default function ValuesStep({ selectedValues, onValuesChange }: ValuesSte
               onClick={() => toggleValue(value.id)}
               disabled={isDisabled}
               className={`
-                p-5 rounded-2xl border-2 text-left transition-all
+                p-3 sm:p-5 rounded-lg sm:rounded-2xl border-2 text-left transition-all
                 ${isSelected
                   ? 'border-primary bg-primary/5'
                   : isDisabled
@@ -66,15 +66,15 @@ export default function ValuesStep({ selectedValues, onValuesChange }: ValuesSte
               `}
               style={isSelected ? { borderColor: '#00e0ff' } : {}}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{value.label}</h3>
-                  <p className="text-sm text-gray-600">{value.description}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-xs sm:text-base text-gray-900 mb-0.5 sm:mb-1 break-words">{value.label}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 break-words">{value.description}</p>
                 </div>
                 {isSelected && (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center ml-3 flex-shrink-0"
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ml-2 flex-shrink-0"
                        style={{ backgroundColor: '#00e0ff' }}>
-                    <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>

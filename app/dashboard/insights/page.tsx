@@ -21,18 +21,20 @@ export default async function InsightsPage() {
     .eq('user_id', user.id)
 
   return (
-    <div>
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Insights
-          </h1>
-          <p className="text-muted-foreground">
-            Analyze your job applications progress and patterns
-          </p>
+    <div className="px-4 sm:px-6">
+      <div className="mb-8">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Insights
+            </h1>
+            <p className="text-muted-foreground">
+              Analyze your job applications progress and patterns
+            </p>
+          </div>
         </div>
-
-        <div className="flex-shrink-0 w-full sm:w-auto">
+        
+        <div className="flex justify-end">
           <AIAdvisorButton applications={applications || []} />
         </div>
       </div>
