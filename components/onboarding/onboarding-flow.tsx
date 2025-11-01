@@ -103,17 +103,17 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-accent/5 to-primary/5">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="w-full min-h-screen bg-gradient-to-br from-white via-accent/5 to-primary/5">
+      <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Owtras! 👋</h1>
-          <p className="text-gray-600">Let's personalize your job search experience</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Welcome to Owtras! 👋</h1>
+          <p className="text-xs sm:text-base text-gray-600">Let's personalize your job search experience</p>
           
           {/* Show upgrade notice if redirecting to subscription */}
           {redirectAfter === '/subscription' && (
-            <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="text-sm text-gray-700 font-medium">
+            <div className="mt-4 p-3 sm:p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-xs sm:text-sm text-gray-700 font-medium">
                 🎉 After setup, you'll be redirected to upgrade to Premium
               </p>
             </div>
@@ -121,12 +121,12 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-xs sm:text-sm font-medium text-gray-700">
               Step {currentStepIndex + 1} of {steps.length}
             </span>
-            <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+            <span className="text-xs sm:text-sm text-gray-500">{Math.round(progress)}%</span>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
@@ -137,7 +137,7 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
         </div>
 
         {/* Steps Content */}
-        <div className="bg-white rounded-3xl shadow-lg p-8 mb-6 border border-gray-100">
+        <div className="w-full bg-white rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-8 mb-4 sm:mb-6 border border-gray-100">
           {currentStep === 'values' && (
             <ValuesStep
               selectedValues={selectedValues}
@@ -170,12 +170,12 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           {currentStepIndex > 0 && (
             <Button
               variant="outline"
               onClick={handleBack}
-              className="flex-1 h-12 rounded-xl border-gray-300"
+              className="w-full h-10 sm:h-12 rounded-lg sm:rounded-xl border-gray-300 text-xs sm:text-base font-medium"
               disabled={loading}
             >
               Back
@@ -185,14 +185,14 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
           <Button
             onClick={handleNext}
             disabled={!canProceed() || loading}
-            className="flex-1 h-12 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
+            className="w-full h-10 sm:h-12 text-black font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-base"
             style={{ backgroundColor: '#00e0ff' }}
           >
             {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
             ) : currentStepIndex === steps.length - 1 ? (
               <>
-                <CheckCircle className="w-5 h-5 mr-2" />
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Complete Setup
               </>
             ) : (
@@ -203,10 +203,10 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
 
         {/* Skip option */}
         {currentStep !== 'values' && (
-          <div className="text-center mt-4">
+          <div className="text-center mt-3 sm:mt-4">
             <button
               onClick={handleComplete}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 transition-colors"
               disabled={loading}
             >
               Skip and complete later

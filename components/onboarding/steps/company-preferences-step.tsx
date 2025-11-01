@@ -1,4 +1,6 @@
-'use client'
+// ============================================================
+// COMPANY PREFERENCES STEP - app/components/onboarding/steps/company-preferences-step.tsx
+// ============================================================
 
 interface CompanyPreferencesStepProps {
   companySize: string[]
@@ -50,20 +52,20 @@ export default function CompanyPreferencesStep({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
           Company preferences
         </h2>
-        <p className="text-gray-600">
+        <p className="text-xs sm:text-base text-gray-600">
           Help us find the right fit for you (optional)
         </p>
       </div>
 
       {/* Company Size */}
       <div>
-        <h3 className="font-semibold text-gray-900 mb-4">Company Size</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">Company Size</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {COMPANY_SIZES.map((size) => {
             const isSelected = companySize.includes(size.id)
 
@@ -72,7 +74,7 @@ export default function CompanyPreferencesStep({
                 key={size.id}
                 onClick={() => toggleCompanySize(size.id)}
                 className={`
-                  p-4 rounded-xl border-2 text-center transition-all
+                  p-2 sm:p-4 rounded-lg sm:rounded-xl border-2 text-center transition-all
                   ${isSelected
                     ? 'border-primary bg-primary/5'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -80,8 +82,8 @@ export default function CompanyPreferencesStep({
                 `}
                 style={isSelected ? { borderColor: '#00e0ff' } : {}}
               >
-                <div className="font-medium text-gray-900 mb-1">{size.label}</div>
-                <div className="text-xs text-gray-500">{size.description}</div>
+                <div className="text-xs sm:text-base font-medium text-gray-900 mb-0.5 sm:mb-1 break-words">{size.label}</div>
+                <div className="text-xs text-gray-500 break-words">{size.description}</div>
               </button>
             )
           })}
@@ -90,8 +92,8 @@ export default function CompanyPreferencesStep({
 
       {/* Industries */}
       <div>
-        <h3 className="font-semibold text-gray-900 mb-4">Industries of Interest</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">Industries of Interest</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
           {INDUSTRIES.map((industry) => {
             const isSelected = industries.includes(industry.id)
 
@@ -100,7 +102,7 @@ export default function CompanyPreferencesStep({
                 key={industry.id}
                 onClick={() => toggleIndustry(industry.id)}
                 className={`
-                  p-3 rounded-xl border-2 text-center transition-all
+                  p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-center transition-all
                   ${isSelected
                     ? 'border-primary bg-primary/5'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -108,7 +110,7 @@ export default function CompanyPreferencesStep({
                 `}
                 style={isSelected ? { borderColor: '#00e0ff' } : {}}
               >
-                <div className="text-sm font-medium text-gray-900">{industry.label}</div>
+                <div className="text-xs sm:text-sm font-medium text-gray-900 break-words">{industry.label}</div>
               </button>
             )
           })}
