@@ -197,11 +197,11 @@ export default async function DashboardPage() {
         </div>
 
         {/* High Match Applications */}
-        {highMatchApplications.length > 0 && (
-          <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">
-              Top Matches
-            </h2>
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Top Matches
+          </h2>
+          {highMatchApplications.length > 0 ? (
             <div className="space-y-3">
               {highMatchApplications.map((app) => (
                 <Link
@@ -234,8 +234,17 @@ export default async function DashboardPage() {
                 </Link>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">
+                No high-match positions yet
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Applications with 80%+ match score will appear here
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Quick Navigation */}

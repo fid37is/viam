@@ -248,9 +248,9 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
         </div>
 
         {/* Average Match Score */}
-        {applications.some(app => app.match_score) && (
-          <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Average Match Score</h2>
+        <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Average Match Score</h2>
+          {applications.some(app => app.match_score) ? (
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="text-4xl sm:text-5xl font-bold text-primary">
                 {averageMatchScore}%
@@ -259,8 +259,17 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
                 Overall alignment with your preferences
               </p>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">
+                No match score data yet
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Add applications to track match scores
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Status Breakdown & Top Locations */}
