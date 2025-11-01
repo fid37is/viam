@@ -17,8 +17,8 @@ export default function AIAdvisorButton({ applications }: AIAdvisorButtonProps) 
   if (applications.length === 0) return null
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-      <div className="flex items-center gap-2 order-2 sm:order-1">
+    <div className="flex items-center gap-3 sm:gap-6">
+      <div className="flex items-center gap-2">
         <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">AI Advisor</span>
         <svg 
           width="16" 
@@ -31,7 +31,7 @@ export default function AIAdvisorButton({ applications }: AIAdvisorButtonProps) 
       </div>
       <button
         onClick={handleClick}
-        className="group relative w-12 h-12 rounded-xl bg-background/40 backdrop-blur-md border border-primary/20 shadow-lg hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex items-center justify-center animate-bounce hover:animate-none flex-shrink-0 order-1 sm:order-2"
+        className="group relative w-12 h-12 rounded-xl bg-background/40 backdrop-blur-md border border-primary/20 shadow-lg hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex items-center justify-center animate-bounce hover:animate-none flex-shrink-0"
       >
         <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 opacity-50 blur-lg animate-pulse"></div>
         <Sparkles className="w-5 h-5 text-primary relative z-10 group-hover:scale-110 transition-transform" />

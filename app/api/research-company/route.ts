@@ -19,6 +19,12 @@ interface CompanyResearch {
   glassdoor_url: string | null
 }
 
+interface DuckDuckGoResult {
+  Title: string
+  Description: string
+  FirstURL: string
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
@@ -61,7 +67,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Perform AI research with web search
+    // Perform research with real web search results
     const research = await researchCompany(companyName)
 
     // Upsert company data
@@ -109,64 +115,123 @@ export async function POST(request: Request) {
   }
 }
 
+// Search company using DuckDuckGo Instant Answer API
+async function searchDuckDuckGo(query: string): Promise<string> {
+  try {
+    // DuckDuckGo Instant Answer API - Free, no API key needed
+    const response = await fetch(
+      `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      }
+    )
+
+    const data = await response.json()
+
+    // Build search results from multiple sources
+    let results = ''
+
+    // Add abstract if available
+    if (data.AbstractText) {
+      results += `${data.AbstractText}\n\n`
+    }
+
+    // Add related topics
+    if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+      results += 'Related Information:\n'
+      data.RelatedTopics.slice(0, 5).forEach((topic: any) => {
+        if (topic.Text) {
+          results += `- ${topic.Text}\n`
+        }
+      })
+    }
+
+    return results || `No specific results found for ${query}`
+  } catch (error) {
+    console.error('DuckDuckGo search error:', error)
+    return `Could not fetch search results for ${query}`
+  }
+}
+
+// Perform company research using Gemini + DuckDuckGo results
 async function researchCompany(companyName: string): Promise<CompanyResearch> {
-  const genAI = getGeminiClient()
-  const model = genAI.getGenerativeModel({ 
-    model: 'gemini-2.0-flash-lite',
-  })
+  try {
+    // Search for company information
+    console.log(`Searching for company: ${companyName}`)
+    
+    const generalSearch = await searchDuckDuckGo(`${companyName} company`)
+    const glassdoorSearch = await searchDuckDuckGo(`${companyName} glassdoor reviews`)
+    const linkedinSearch = await searchDuckDuckGo(`${companyName} linkedin`)
+    const cultureSearch = await searchDuckDuckGo(`${companyName} company culture employee reviews`)
 
-  const prompt = `You are a professional company researcher with web search capabilities. Research "${companyName}" and provide comprehensive, accurate information.
+    // Combine all search results
+    const combinedResults = `
+GENERAL COMPANY INFO:
+${generalSearch}
 
-CRITICAL INSTRUCTIONS:
-1. Find the company's OFFICIAL website (not job boards like LinkedIn, Indeed, Glassdoor)
-2. If the company has a LinkedIn page, include the LinkedIn company page URL
-3. If the company has a Glassdoor page, include the Glassdoor company page URL
-4. Use real, publicly available information
-5. Be honest about what you find
+GLASSDOOR & EMPLOYEE REVIEWS:
+${glassdoorSearch}
 
-Search the web for:
-- Official company website
-- Company LinkedIn page
-- Company Glassdoor reviews and ratings
-- Company information (industry, size, location, culture)
-- Employee reviews and feedback
-- Company reputation and work environment
+LINKEDIN INFORMATION:
+${linkedinSearch}
 
-Respond ONLY with valid JSON in exactly this format (no markdown, no code blocks):
+COMPANY CULTURE & REVIEWS:
+${cultureSearch}
+`
+
+    console.log('Search results compiled, sending to Gemini for analysis...')
+
+    // Use Gemini to analyze and structure the search results
+    const genAI = getGeminiClient()
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash-lite',
+    })
+
+    const prompt = `You are a professional company researcher. Analyze the following web search results about "${companyName}" and extract structured company information.
+
+WEB SEARCH RESULTS:
+${combinedResults}
+
+Based on these search results, provide accurate company information. Use ONLY information found in the search results - do not make assumptions.
+
+Respond ONLY with valid JSON in exactly this format (no markdown, no code blocks, no extra text):
 {
   "name": "Official Company Name",
-  "website": "https://official-company-website.com",
-  "description": "Comprehensive 3-4 sentence description of what the company does, their products/services, and market position",
-  "industry": "Primary industry category",
+  "website": "https://official-company-website.com or null",
+  "description": "Accurate 3-4 sentence description based on search results",
+  "industry": "Specific industry found in results",
   "company_size": "Startup/Small (1-50)/Medium (51-500)/Large (501-5000)/Enterprise (5000+)",
-  "headquarters": "City, State/Country",
+  "headquarters": "City, State/Country found in results",
   "founded_year": 2020,
-  "culture_summary": "2-3 sentence summary of company culture, work environment, and employee experience based on reviews",
-  "pros": ["Specific positive aspect 1", "Specific positive aspect 2", "Specific positive aspect 3", "Specific positive aspect 4"],
-  "cons": ["Specific negative aspect 1", "Specific negative aspect 2", "Specific negative aspect 3"],
+  "culture_summary": "2-3 sentence summary of company culture from employee reviews",
+  "pros": ["Positive aspect from reviews", "Positive aspect from reviews", "Positive aspect from reviews", "Positive aspect from reviews"],
+  "cons": ["Negative aspect from reviews", "Negative aspect from reviews", "Negative aspect from reviews"],
   "overall_rating": 3.8,
-  "linkedin_url": "https://www.linkedin.com/company/company-name",
-  "glassdoor_url": "https://www.glassdoor.com/Overview/Working-at-company-name.htm"
+  "linkedin_url": "https://www.linkedin.com/company/company-name or null",
+  "glassdoor_url": "https://www.glassdoor.com/Overview/Working-at-company-name.htm or null"
 }
 
 IMPORTANT:
-- website must be the official company website (e.g., company.com, NOT linkedin.com or indeed.com)
-- linkedin_url should be the company's LinkedIn page (format: linkedin.com/company/...)
-- glassdoor_url should be the company's Glassdoor page if it exists
+- Use ONLY information from the search results above
+- If information is not found, use null for URLs
 - overall_rating should be between 1.0 and 5.0
-- If information is not available, use null for URLs and reasonable estimates for other fields
-- founded_year should be null if unknown`
+- founded_year should be null if not found
+- pros and cons should be based on actual employee reviews found in results
+- Respond ONLY with JSON, nothing else`
 
-  try {
     const result = await model.generateContent(prompt)
     const response = result.response
     let text = response.text().trim()
 
-    // Clean up response
+    console.log('Gemini response received, parsing JSON...')
+
+    // Clean up response - remove markdown if present
     if (text.startsWith('```json')) {
-      text = text.replace(/^```json\n/, '').replace(/\n```$/, '')
+      text = text.replace(/^```json\n?/, '').replace(/\n?```$/, '')
     } else if (text.startsWith('```')) {
-      text = text.replace(/^```\n/, '').replace(/\n```$/, '')
+      text = text.replace(/^```\n?/, '').replace(/\n?```$/, '')
     }
 
     const research = JSON.parse(text) as CompanyResearch
@@ -176,21 +241,25 @@ IMPORTANT:
     if (!Array.isArray(research.pros)) research.pros = []
     if (!Array.isArray(research.cons)) research.cons = []
     
-    // Validate URLs - ensure they're not job board URLs
-    if (research.website) {
-      const jobBoards = ['linkedin.com', 'indeed.com', 'glassdoor.com', 'monster.com', 'ziprecruiter.com']
+    // Validate URLs - ensure they're not job board URLs (except LinkedIn and Glassdoor)
+    if (research.website && research.website !== 'null') {
+      const jobBoards = ['linkedin.com', 'indeed.com', 'monster.com', 'ziprecruiter.com']
       const isJobBoard = jobBoards.some(board => research.website?.includes(board))
       if (isJobBoard) {
         research.website = null
       }
+    } else {
+      research.website = null
     }
+
+    console.log(`Successfully researched company: ${research.name}`)
 
     return research
 
   } catch (error: any) {
-    console.error('Gemini research error:', error)
+    console.error('Company research error:', error)
     
-    // Return basic structure if AI fails
+    // Return basic structure if research fails
     return {
       name: companyName,
       website: null,
