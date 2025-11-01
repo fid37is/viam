@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Application } from '@/lib/supabase/types'
 import { Input } from '@/components/ui/input'
-import { Search, Calendar, MapPin, Trash2, AlertCircle, Loader2 } from 'lucide-react'
+import { Search, Calendar, MapPin, Trash2, AlertCircle, Loader2, X } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -35,6 +35,7 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
   const [deletionsRemaining, setDeletionsRemaining] = useState(0)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [blockReason, setBlockReason] = useState<'too_new' | 'limit_reached' | null>(null)
+  const [dismissedBanner, setDismissedBanner] = useState(false)
 
   // Check which apps can be deleted
   const tooNewApps = selectedIds.filter(id => {
@@ -46,6 +47,9 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
 
   const canDeleteAll = userPlan === 'premium' || (deletionsRemaining > 0 && tooNewApps.length === 0)
   const canDelete = selectedIds.length > 0
+
+  // Show banner only when close to limit (3 or fewer remaining) and not dismissed
+  const showWarningBanner = userPlan === 'free' && deletionsRemaining <= 3 && !dismissedBanner
 
   // Filter applications
   const filteredApplications = applications.filter((app) => {
@@ -195,20 +199,27 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
         </div>
       )}
 
-      {/* Free Tier Warning */}
-      {userPlan === 'free' && (
-        <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-200 dark:border-blue-900/40 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+      {/* Free Tier Warning - Only shows when close to limit */}
+      {showWarningBanner && (
+        <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-4 border border-amber-200 dark:border-amber-900/40 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-              Free tier deletions: <span className="font-bold">{deletionsRemaining} of 10</span> remaining this month
+            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+              Running low on deletions: <span className="font-bold">{deletionsRemaining} remaining</span>
             </p>
-            <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
-              • Can only delete apps older than 14 days • Resets every 30 days • Premium has unlimited
+            <p className="text-xs text-amber-800 dark:text-amber-200 mt-1">
+              You have <span className="font-bold">{deletionsRemaining}</span> deletions left this month. Upgrade to Premium for unlimited.
             </p>
           </div>
+          <button
+            onClick={() => setDismissedBanner(true)}
+            className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex-shrink-0 mt-0.5"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
+
       {/* Filters and Search */}
       <div className="bg-card rounded-2xl shadow-sm p-6 border border-border">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -321,7 +332,7 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
 
       {/* Applications List */}
       {paginatedApplications.length === 0 ? (
-        <div className="bg-card rounded-2xl shadow-sm p-12 border border-border text-center">
+        <div className="bg-card rounded-2xl shadow-sm p-8 sm:p-12 border border-border text-center">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Search className="w-8 h-8 text-muted-foreground" />
           </div>

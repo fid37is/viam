@@ -38,7 +38,7 @@ export default async function ApplicationsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Applications
@@ -48,12 +48,13 @@ export default async function ApplicationsPage() {
           </p>
         </div>
 
-        <Link href="/dashboard/applications/new">
+        <Link href="/dashboard/applications/new" className="w-full sm:w-auto">
           <Button
-            className="h-12 px-6 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
+            className="w-full sm:w-auto h-12 px-6 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
           >
             <Plus className="w-5 h-5 mr-2" />
-            Add Application
+            <span className="hidden sm:inline">Add Application</span>
+            <span className="sm:hidden">Add Application</span>
           </Button>
         </Link>
       </div>

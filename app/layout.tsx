@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/providers/theme-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'TrailAm - Find Your Way',
+  title: 'Owtra - Smarter Tracking, Sharper Insights',
   description: 'Smart job application tracking with AI-powered company matching',
 }
 
