@@ -44,7 +44,7 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
 
   // Match analysis
   const [matchAnalysis, setMatchAnalysis] = useState<MatchAnalysis | null>(null)
-  
+
   // Interview prep
   const [interviewPrepEnabled, setInterviewPrepEnabled] = useState(false)
 
@@ -62,7 +62,9 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
       const response = await fetch('/api/scrape-job', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: jobUrl }),
+        body: JSON.stringify({
+          companyName
+        }),
       })
 
       if (!response.ok) {
@@ -130,7 +132,7 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
     try {
       // First, research company and get/create company record
       let companyId: string | null = null
-      
+
       try {
         const companyResponse = await fetch('/api/research-company', {
           method: 'POST',
@@ -188,7 +190,7 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
       }
 
       toast.success('Application added successfully!', { style: { color: '#16a34a' } })
-      
+
       router.push('/dashboard/applications')
       router.refresh()
     } catch (err: any) {

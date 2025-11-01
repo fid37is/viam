@@ -10,11 +10,13 @@ interface CompanyResearch {
   industry: string
   company_size: string
   headquarters: string
+  founded_year: number | null
   culture_summary: string
   pros: string[]
   cons: string[]
   overall_rating: number
-  key_facts: string[]
+  linkedin_url: string | null
+  glassdoor_url: string | null
 }
 
 export async function POST(request: Request) {
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { companyName, website } = await request.json()
+    const { companyName } = await request.json()
 
     if (!companyName) {
       return NextResponse.json({ error: 'Company name required' }, { status: 400 })
@@ -59,8 +61,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Perform AI research
-    const research = await researchCompany(companyName, website)
+    // Perform AI research with web search
+    const research = await researchCompany(companyName)
 
     // Upsert company data
     const { data: company, error: upsertError } = await supabase
@@ -73,10 +75,13 @@ export async function POST(request: Request) {
         industry: research.industry,
         company_size: research.company_size,
         headquarters: research.headquarters,
+        founded_year: research.founded_year,
         culture_summary: research.culture_summary,
         pros: research.pros,
         cons: research.cons,
         overall_rating: research.overall_rating,
+        linkedin_url: research.linkedin_url,
+        glassdoor_url: research.glassdoor_url,
         last_researched_at: new Date().toISOString(),
       }, {
         onConflict: 'slug'
@@ -104,44 +109,53 @@ export async function POST(request: Request) {
   }
 }
 
-async function researchCompany(
-  companyName: string,
-  website: string | null
-): Promise<CompanyResearch> {
+async function researchCompany(companyName: string): Promise<CompanyResearch> {
   const genAI = getGeminiClient()
   const model = genAI.getGenerativeModel({ 
     model: 'gemini-2.0-flash-lite',
   })
 
-  const prompt = `You are a professional company researcher. Research this company and provide comprehensive background information that would help a job seeker evaluate whether to apply.
+  const prompt = `You are a professional company researcher with web search capabilities. Research "${companyName}" and provide comprehensive, accurate information.
 
-COMPANY: ${companyName}
-${website ? `WEBSITE: ${website}` : ''}
+CRITICAL INSTRUCTIONS:
+1. Find the company's OFFICIAL website (not job boards like LinkedIn, Indeed, Glassdoor)
+2. If the company has a LinkedIn page, include the LinkedIn company page URL
+3. If the company has a Glassdoor page, include the Glassdoor company page URL
+4. Use real, publicly available information
+5. Be honest about what you find
 
-Research and provide detailed information about:
-1. What the company does (products/services)
-2. Industry and market position
-3. Company size and scale
-4. Company culture and work environment
-5. Employee reviews and reputation
-6. Benefits and drawbacks of working there
+Search the web for:
+- Official company website
+- Company LinkedIn page
+- Company Glassdoor reviews and ratings
+- Company information (industry, size, location, culture)
+- Employee reviews and feedback
+- Company reputation and work environment
 
-IMPORTANT: Respond ONLY with valid JSON in exactly this format (no markdown, no code blocks):
+Respond ONLY with valid JSON in exactly this format (no markdown, no code blocks):
 {
-  "name": "${companyName}",
-  "website": "${website || ''}",
-  "description": "<comprehensive 3-4 sentence description of what company does>",
-  "industry": "<primary industry>",
-  "company_size": "<Startup/Small/Medium/Large/Enterprise>",
-  "headquarters": "<city, country>",
-  "culture_summary": "<2-3 sentence summary of company culture and work environment>",
-  "pros": ["<pro 1>", "<pro 2>", "<pro 3>", "<pro 4>"],
-  "cons": ["<con 1>", "<con 2>", "<con 3>"],
-  "overall_rating": <rating 1.0-5.0 as number>,
-  "key_facts": ["<fact 1>", "<fact 2>", "<fact 3>"]
+  "name": "Official Company Name",
+  "website": "https://official-company-website.com",
+  "description": "Comprehensive 3-4 sentence description of what the company does, their products/services, and market position",
+  "industry": "Primary industry category",
+  "company_size": "Startup/Small (1-50)/Medium (51-500)/Large (501-5000)/Enterprise (5000+)",
+  "headquarters": "City, State/Country",
+  "founded_year": 2020,
+  "culture_summary": "2-3 sentence summary of company culture, work environment, and employee experience based on reviews",
+  "pros": ["Specific positive aspect 1", "Specific positive aspect 2", "Specific positive aspect 3", "Specific positive aspect 4"],
+  "cons": ["Specific negative aspect 1", "Specific negative aspect 2", "Specific negative aspect 3"],
+  "overall_rating": 3.8,
+  "linkedin_url": "https://www.linkedin.com/company/company-name",
+  "glassdoor_url": "https://www.glassdoor.com/Overview/Working-at-company-name.htm"
 }
 
-Base your research on publicly available information. Be honest and balanced. If you don't have specific information, make reasonable inferences based on the company name and industry, but note uncertainty.`
+IMPORTANT:
+- website must be the official company website (e.g., company.com, NOT linkedin.com or indeed.com)
+- linkedin_url should be the company's LinkedIn page (format: linkedin.com/company/...)
+- glassdoor_url should be the company's Glassdoor page if it exists
+- overall_rating should be between 1.0 and 5.0
+- If information is not available, use null for URLs and reasonable estimates for other fields
+- founded_year should be null if unknown`
 
   try {
     const result = await model.generateContent(prompt)
@@ -158,10 +172,18 @@ Base your research on publicly available information. Be honest and balanced. If
     const research = JSON.parse(text) as CompanyResearch
 
     // Validate and sanitize
-    research.overall_rating = Math.min(5.0, Math.max(1.0, research.overall_rating))
+    research.overall_rating = Math.min(5.0, Math.max(1.0, research.overall_rating || 3.0))
     if (!Array.isArray(research.pros)) research.pros = []
     if (!Array.isArray(research.cons)) research.cons = []
-    if (!Array.isArray(research.key_facts)) research.key_facts = []
+    
+    // Validate URLs - ensure they're not job board URLs
+    if (research.website) {
+      const jobBoards = ['linkedin.com', 'indeed.com', 'glassdoor.com', 'monster.com', 'ziprecruiter.com']
+      const isJobBoard = jobBoards.some(board => research.website?.includes(board))
+      if (isJobBoard) {
+        research.website = null
+      }
+    }
 
     return research
 
@@ -171,16 +193,18 @@ Base your research on publicly available information. Be honest and balanced. If
     // Return basic structure if AI fails
     return {
       name: companyName,
-      website: website,
-      description: 'Company information could not be automatically researched. Please add details manually.',
+      website: null,
+      description: 'Company information could not be automatically researched. Please search for the company manually.',
       industry: 'Unknown',
       company_size: 'Unknown',
       headquarters: 'Unknown',
+      founded_year: null,
       culture_summary: 'Information not available',
       pros: [],
       cons: [],
       overall_rating: 3.0,
-      key_facts: []
+      linkedin_url: null,
+      glassdoor_url: null
     }
   }
 }

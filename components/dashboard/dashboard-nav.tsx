@@ -1,15 +1,24 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, Briefcase, TrendingUp, Settings, LogOut, Moon, Sun } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { LayoutDashboard, Briefcase, TrendingUp, Settings, LogOut, Moon, Sun, Building2, User } from 'lucide-react'
 import { useTheme } from '@/components/providers/theme-provider'
-import type { User } from '@supabase/supabase-js'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface DashboardNavProps {
-  user: User
+  user: SupabaseUser
 }
 
 export default function DashboardNav({ user }: DashboardNavProps) {
@@ -27,46 +36,52 @@ export default function DashboardNav({ user }: DashboardNavProps) {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/dashboard/applications', label: 'Applications', icon: Briefcase },
+    { href: '/dashboard/companies', label: 'Companies', icon: Building2 },
     { href: '/dashboard/insights', label: 'Insights', icon: TrendingUp },
-    { href: '/dashboard/profile', label: 'Profile', icon: Settings },
   ]
 
+  const isCompaniesActive = pathname === '/dashboard/companies' || pathname.startsWith('/dashboard/companies/')
+
   return (
-    <nav className="bg-background border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-background/95">
+    <nav className="border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-background/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link href="/dashboard" className="flex items-center">
-              <span className="text-2xl font-bold text-foreground">TrailAm</span>
+              <Image 
+                src="/trailam-logo.svg" 
+                alt="TrailAm Logo" 
+                width={40} 
+                height={40}
+                className="object-contain"
+              />
             </Link>
+          </div>
 
-            <div className="hidden sm:ml-8 sm:flex sm:space-x-8">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'border-primary text-foreground'
-                        : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </div>
+          <div className="hidden sm:flex sm:space-x-8">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = item.href === '/dashboard/companies' 
+                ? isCompaniesActive 
+                : pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  {item.label}
+                </Link>
+              )
+            })}
           </div>
 
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
-              {user.email}
-            </span>
-            
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
@@ -80,15 +95,36 @@ export default function DashboardNav({ user }: DashboardNavProps) {
               )}
             </button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="hover:bg-destructive/10 hover:text-destructive"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                  <User className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">My Account</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/profile" className="flex items-center cursor-pointer">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -98,7 +134,9 @@ export default function DashboardNav({ user }: DashboardNavProps) {
         <div className="px-2 pt-2 pb-3 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon
-            const isActive = pathname === item.href
+            const isActive = item.href === '/dashboard/companies' 
+              ? isCompaniesActive 
+              : pathname === item.href
             return (
               <Link
                 key={item.href}
