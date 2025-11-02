@@ -385,6 +385,8 @@ export type Database = {
           top_values: Json | null
           updated_at: string | null
           work_location_preference: string | null
+          account_status: 'active' | 'hibernated' | 'deleted'
+          deletion_scheduled_at: string | null
         }
         Insert: {
           career_goals?: string | null
@@ -403,6 +405,8 @@ export type Database = {
           top_values?: Json | null
           updated_at?: string | null
           work_location_preference?: string | null
+          account_status?: 'active' | 'hibernated' | 'deleted'
+          deletion_scheduled_at?: string | null
         }
         Update: {
           career_goals?: string | null
@@ -421,6 +425,8 @@ export type Database = {
           top_values?: Json | null
           updated_at?: string | null
           work_location_preference?: string | null
+          account_status?: 'active' | 'hibernated' | 'deleted'
+          deletion_scheduled_at?: string | null
         }
         Relationships: []
       }
