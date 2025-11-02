@@ -483,6 +483,12 @@ export type Database = {
         Args: { p_name: string; p_website?: string }
         Returns: string
       }
+      email_exists: {
+        Args: {
+          p_email: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

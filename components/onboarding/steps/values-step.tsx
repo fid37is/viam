@@ -32,20 +32,20 @@ export default function ValuesStep({ selectedValues, onValuesChange }: ValuesSte
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-5 md:space-y-6">
       <div className="text-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-1 sm:mb-2">
           What matters most to you?
         </h2>
-        <p className="text-xs sm:text-base text-gray-600">
+        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-2 sm:mb-2.5">
           Select at least 3 values that are important in your next role
         </p>
-        <p className="text-xs sm:text-sm text-gray-500 mt-2">
+        <p className="text-xs md:text-xs text-muted-foreground font-medium">
           {selectedValues.length} of 5 selected
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
         {VALUES.map((value) => {
           const isSelected = selectedValues.includes(value.id)
           const isDisabled = !isSelected && selectedValues.length >= 5
@@ -56,25 +56,31 @@ export default function ValuesStep({ selectedValues, onValuesChange }: ValuesSte
               onClick={() => toggleValue(value.id)}
               disabled={isDisabled}
               className={`
-                p-3 sm:p-5 rounded-lg sm:rounded-2xl border-2 text-left transition-all
+                p-3 sm:p-3.5 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-2 text-left transition-all
                 ${isSelected
-                  ? 'border-primary bg-primary/5'
+                  ? 'border-primary bg-primary/5 shadow-sm'
                   : isDisabled
-                  ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-border bg-muted/50 opacity-50 cursor-not-allowed'
+                  : 'border-border hover:border-primary/50 hover:bg-muted/30'
                 }
               `}
-              style={isSelected ? { borderColor: '#00e0ff' } : {}}
+              style={isSelected ? { borderColor: 'hsl(var(--primary))' } : {}}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-xs sm:text-base text-gray-900 mb-0.5 sm:mb-1 break-words">{value.label}</h3>
-                  <p className="text-xs sm:text-sm text-gray-600 break-words">{value.description}</p>
+                  <h3 className="font-semibold text-xs sm:text-sm md:text-base text-foreground mb-0.5 sm:mb-1 break-words">
+                    {value.label}
+                  </h3>
+                  <p className="text-xs sm:text-xs md:text-sm text-muted-foreground break-words">
+                    {value.description}
+                  </p>
                 </div>
                 {isSelected && (
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ml-2 flex-shrink-0"
-                       style={{ backgroundColor: '#00e0ff' }}>
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div 
+                    className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center ml-2 flex-shrink-0"
+                    style={{ backgroundColor: 'hsl(var(--primary))' }}
+                  >
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>

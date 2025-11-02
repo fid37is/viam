@@ -1,6 +1,4 @@
-// ============================================================
-// WORK PREFERENCES STEP - app/components/onboarding/steps/work-preferences-step.tsx
-// ============================================================
+'use client'
 
 interface WorkPreferencesStepProps {
   workLocation: string
@@ -16,17 +14,17 @@ const WORK_LOCATIONS = [
 
 export default function WorkPreferencesStep({ workLocation, onWorkLocationChange }: WorkPreferencesStepProps) {
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-5 md:space-y-6">
       <div className="text-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-1 sm:mb-2">
           Where do you prefer to work?
         </h2>
-        <p className="text-xs sm:text-base text-gray-600">
+        <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
           Choose your ideal work arrangement
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
         {WORK_LOCATIONS.map((location) => {
           const isSelected = workLocation === location.id
 
@@ -35,20 +33,24 @@ export default function WorkPreferencesStep({ workLocation, onWorkLocationChange
               key={location.id}
               onClick={() => onWorkLocationChange(location.id)}
               className={`
-                p-3 sm:p-6 rounded-lg sm:rounded-2xl border-2 text-center transition-all
+                p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl md:rounded-2xl border-2 text-center transition-all
                 ${isSelected
-                  ? 'border-primary bg-primary/5 shadow-md'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-border hover:border-primary/50 hover:bg-muted/30'
                 }
               `}
-              style={isSelected ? { borderColor: '#00e0ff' } : {}}
+              style={isSelected ? { borderColor: 'hsl(var(--primary))' } : {}}
             >
-              <h3 className="font-semibold text-xs sm:text-lg text-gray-900 mb-1 sm:mb-2 break-words">{location.label}</h3>
-              <p className="text-xs sm:text-sm text-gray-600 break-words">{location.description}</p>
+              <h3 className="font-semibold text-xs sm:text-sm md:text-base text-foreground mb-1 sm:mb-1.5 break-words">
+                {location.label}
+              </h3>
+              <p className="text-xs sm:text-xs md:text-sm text-muted-foreground break-words">
+                {location.description}
+              </p>
             </button>
           )
         })}
       </div>
     </div>
   )
-}
+} 
