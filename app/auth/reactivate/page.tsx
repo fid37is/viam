@@ -2,18 +2,40 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-export default function ReactivatePage() {
+function ReactivateContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [loading, setLoading] = useState(false)
+  const supabase = createClient()
+
   const email = searchParams.get('email')
   const status = searchParams.get('status')
-  const supabase = createClient()
-  const [loading, setLoading] = useState(false)
+
+  const handleReactivate = async () => {
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email!, {
+        redirectTo: `${window.location.origin}/auth/callback?type=reactivate`,
+      })
+
+      if (error) throw error
+
+      toast.success('Verification email sent! Check your inbox to confirm reactivation.')
+      
+      setTimeout(() => {
+        router.push('/')
+      }, 2000)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send reactivation email')
+      setLoading(false)
+    }
+  }
 
   if (!email || !status) {
     return (
@@ -31,26 +53,6 @@ export default function ReactivatePage() {
         </div>
       </div>
     )
-  }
-
-  const handleReactivate = async () => {
-    setLoading(true)
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?type=reactivate`,
-      })
-
-      if (error) throw error
-
-      toast.success('Verification email sent! Check your inbox to confirm reactivation.')
-      
-      setTimeout(() => {
-        router.push('/')
-      }, 2000)
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to send reactivation email')
-      setLoading(false)
-    }
   }
 
   return (
@@ -94,5 +96,21 @@ export default function ReactivatePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="bg-card rounded-2xl shadow-lg p-8 max-w-md w-full border border-border" />
+    </div>
+  )
+}
+
+export default function ReactivatePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ReactivateContent />
+    </Suspense>
   )
 }
