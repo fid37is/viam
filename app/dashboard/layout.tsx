@@ -18,7 +18,7 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect('/')
   }
 
   return (

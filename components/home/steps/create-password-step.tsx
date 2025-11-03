@@ -1,7 +1,3 @@
-// ============================================================
-// FILE: app/components/auth/steps/create-password-step.tsx
-// ============================================================
-
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
@@ -49,12 +45,10 @@ export default function CreatePasswordStep({
       toast.error('Please enter a password')
       return
     }
-
     if (password.length < 6) {
       toast.error('Password must be at least 6 characters')
       return
     }
-
     if (password !== confirmPassword) {
       toast.error('Passwords do not match')
       return
@@ -63,32 +57,25 @@ export default function CreatePasswordStep({
     onLoading(true)
 
     try {
-      const baseRedirect = `${window.location.origin}/auth/callback`
-      const redirectUrl = intentUpgrade
-        ? `${baseRedirect}?redirect=/subscription&new_user=true`
-        : `${baseRedirect}?new_user=true`
-
-      const { error } = await supabase.auth.signUp({
+      // Create user account in Supabase
+      // Supabase will automatically send confirmation email using your custom template
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: { intent_upgrade: intentUpgrade },
         },
       })
 
-      if (error) {
-        if (error.message.includes('User already registered')) {
-          toast.error('This email is already registered. Please sign in instead.')
-        } else {
-          throw error
-        }
-      } else {
-        onSuccess()
-      }
+      if (error) throw error
+      if (!data.user) throw new Error('No user created')
+
+      onLoading(false)
+      toast.success('Account created! Check your email.')
+      onSuccess()
     } catch (err: any) {
-      toast.error(err.message)
-    } finally {
+      console.error('Account creation error:', err)
+      toast.error(err.message || 'Failed to create account')
       onLoading(false)
     }
   }
@@ -113,7 +100,7 @@ export default function CreatePasswordStep({
           <button
             type="button"
             onClick={() => onShowPasswordChange(!showPassword)}
-            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 mt-0.5 p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors"
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 hover:bg-muted rounded-lg"
             tabIndex={-1}
           >
             {showPassword ? (
@@ -123,9 +110,6 @@ export default function CreatePasswordStep({
             )}
           </button>
         </div>
-        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-          Must be at least 6 characters
-        </p>
       </div>
 
       <div>
@@ -146,7 +130,7 @@ export default function CreatePasswordStep({
           <button
             type="button"
             onClick={() => onShowConfirmPasswordChange(!showConfirmPassword)}
-            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 mt-0.5 p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors"
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 hover:bg-muted rounded-lg"
             tabIndex={-1}
           >
             {showConfirmPassword ? (

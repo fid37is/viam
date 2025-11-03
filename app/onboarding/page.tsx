@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import OnboardingFlow from '@/components/onboarding/onboarding-flow';
+import OnboardingFlow from '@/components/onboarding/onboarding-flow'
 
 export default async function OnboardingPage() {
   const supabase = await createClient()
@@ -24,5 +24,8 @@ export default async function OnboardingPage() {
     redirect('/dashboard')
   }
 
-  return <OnboardingFlow user={user} />
+  // Check if user just verified email (user.email_confirmed_at from Supabase auth)
+  const justVerified = !!user.email_confirmed_at && !profile?.onboarding_completed
+
+  return <OnboardingFlow user={user} verified={justVerified} />
 }

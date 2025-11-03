@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const redirectParam = requestUrl.searchParams.get('redirect')
-  const isNewUser = requestUrl.searchParams.get('new_user')
+  const type = requestUrl.searchParams.get('type')
   const origin = requestUrl.origin
 
   if (code) {
@@ -49,33 +49,62 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (user) {
-      // Check if profile exists and if onboarding is completed
+      // Check if profile exists and account status
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('onboarding_completed, created_at')
+        .select('onboarding_completed, created_at, account_status, deletion_scheduled_at')
         .eq('id', user.id)
         .single()
 
-      // Check if user has subscription intent from metadata
+      // Handle reactivation flow
+      if (type === 'reactivate' && (profile?.account_status === 'hibernated' || profile?.account_status === 'deleted')) {
+        // Check if deleted account is within grace period
+        if (profile?.account_status === 'deleted') {
+          const deletionDate = new Date(profile.deletion_scheduled_at)
+          if (new Date() > deletionDate) {
+            return NextResponse.redirect(`${origin}/?error=account_permanently_deleted`)
+          }
+        }
+
+        // Reactivate the account
+        await supabase
+          .from('profiles')
+          .update({
+            account_status: 'active',
+            deletion_scheduled_at: null,
+          })
+          .eq('id', user.id)
+
+        return NextResponse.redirect(`${origin}/dashboard?reactivated=true`)
+      }
+
+      // Check if account is hibernated or deleted (blocking login)
+      if (profile?.account_status === 'hibernated' || profile?.account_status === 'deleted') {
+        return NextResponse.redirect(
+          `${origin}/auth/reactivate?email=${encodeURIComponent(user.email || '')}&status=${profile.account_status}`
+        )
+      }
+
+      // Check subscription intent
       const hasSubscriptionIntent = user.user_metadata?.intent_upgrade || redirectParam === '/subscription'
 
-      // Determine if this is a new user
-      const isNewlyCreatedUser = isNewUser === 'true' || 
-        !profile || 
-        (new Date().getTime() - new Date(profile.created_at || 0).getTime()) < 5000
+      // FIXED: Check if user needs onboarding based on profile completion status
+      // This handles both new users and existing users who haven't completed onboarding
+      const needsOnboarding = !profile || !profile.onboarding_completed
 
-      // If new user or onboarding not completed, redirect to onboarding
-      if (isNewlyCreatedUser || !profile?.onboarding_completed) {
-        // Preserve subscription intent through onboarding
+      if (needsOnboarding) {
+        // User needs to complete onboarding
         if (hasSubscriptionIntent) {
-          return NextResponse.redirect(`${origin}/onboarding?redirect=/subscription`)
+          // Preserve subscription intent and add verified flag
+          return NextResponse.redirect(`${origin}/onboarding?redirect=/subscription&verified=true`)
         }
-        return NextResponse.redirect(`${origin}/onboarding`)
+        // Regular onboarding flow with verified flag
+        return NextResponse.redirect(`${origin}/onboarding?verified=true`)
       }
 
       // Existing user with completed onboarding
-      // If they have subscription intent, redirect to subscription page
       if (hasSubscriptionIntent) {
+        // Redirect to subscription page for upgrade intent
         return NextResponse.redirect(`${origin}/subscription`)
       }
 
@@ -84,6 +113,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // No code - redirect to home
+  // No code - redirect to home with error
   return NextResponse.redirect(`${origin}/?error=no_token`)
 }
