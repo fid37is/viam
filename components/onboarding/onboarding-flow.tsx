@@ -24,6 +24,7 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectAfter = searchParams.get('redirect')
+  const reactivated = searchParams.get('reactivated')
   const supabase = createClient()
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('name')
@@ -43,6 +44,13 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
       toast.success('✅ Email verified! Let\'s complete your profile.')
     }
   }, [verified])
+
+  // Show reactivation toast on mount if account was reactivated
+  useEffect(() => {
+    if (reactivated === 'true') {
+      toast.success('✅ Account reactivated! Welcome back.')
+    }
+  }, [reactivated])
 
   const steps: OnboardingStep[] = ['name', 'values', 'deal-breakers', 'work-preferences', 'company-preferences']
   const currentStepIndex = steps.indexOf(currentStep)
