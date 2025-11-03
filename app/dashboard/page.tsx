@@ -1,12 +1,7 @@
-// ==========================================
-// FILE: app/(dashboard)/dashboard/page.tsx
-// ==========================================
-// Main dashboard page
-
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Plus, ChevronRight, AlertCircle, TrendingUp, Zap, Clock } from 'lucide-react'
+import { Plus, ChevronRight, AlertCircle, TrendingUp, Zap, Clock, X } from 'lucide-react'
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils'
 
 export default async function DashboardPage() {
@@ -16,19 +11,45 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Fetch all applications
-  const { data: applications } = await supabase
-    .from('applications')
-    .select('*')
-    .eq('user_id', user!.id)
-    .order('created_at', { ascending: false })
-
   // Fetch profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user!.id)
     .single()
+
+  // Check if account is scheduled for deletion
+  const isScheduledForDeletion = profile?.account_status === 'deleted'
+  const deletionDate = profile?.deletion_scheduled_at ? new Date(profile.deletion_scheduled_at) : null
+  const daysUntilDeletion = deletionDate
+    ? Math.ceil((deletionDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 0
+
+  // If account is hibernated, show message
+  if (profile?.account_status === 'hibernated') {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="bg-card rounded-2xl shadow-2xl p-8 max-w-md w-full border border-border text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Account Hibernated</h1>
+          <p className="text-muted-foreground mb-6">
+            Your account is currently hibernated. Contact support to reactivate it.
+          </p>
+          <Link href="/dashboard/profile">
+            <Button className="w-full bg-primary text-primary-foreground hover:opacity-90">
+              Go to Settings
+            </Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Fetch all applications
+  const { data: applications } = await supabase
+    .from('applications')
+    .select('*')
+    .eq('user_id', user!.id)
+    .order('created_at', { ascending: false })
 
   // Calculate stats
   const stats = {
@@ -56,6 +77,29 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Deletion Warning */}
+      {isScheduledForDeletion && daysUntilDeletion > 0 && (
+        <div className="bg-destructive/10 rounded-2xl shadow-sm border border-destructive/30 p-4 sm:p-6">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <AlertCircle className="w-6 h-6 text-destructive flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h2 className="text-base sm:text-lg font-semibold text-destructive mb-2">
+                Account Deletion Scheduled
+              </h2>
+              <p className="text-sm text-destructive/80 mb-4">
+                Your account will be permanently deleted in <strong>{daysUntilDeletion} days</strong> ({deletionDate?.toLocaleDateString()}). 
+                You can reactivate your account anytime before this date.
+              </p>
+              <Link href="/dashboard/profile">
+                <Button size="sm" className="bg-destructive text-destructive-foreground hover:opacity-90">
+                  Reactivate Account
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl shadow-sm border border-primary/20 p-4 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">

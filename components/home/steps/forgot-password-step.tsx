@@ -1,7 +1,3 @@
-// ============================================================
-// FILE: app/components/auth/steps/forgot-password-step.tsx
-// ============================================================
-
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
@@ -15,7 +11,7 @@ interface ForgotPasswordStepProps {
   email: string
   onEmailChange: (email: string) => void
   loading: boolean
-  onLoading: (state: boolean) => void
+  onLoading: (loading: boolean) => void
   onSuccess: () => void
 }
 
@@ -28,25 +24,32 @@ export default function ForgotPasswordStep({
 }: ForgotPasswordStepProps) {
   const supabase = createClient()
 
-  const handleForgotPassword = async () => {
+  const handleForgotPasswordSubmit = async () => {
     if (!email) {
       toast.error('Please enter your email')
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address')
       return
     }
 
     onLoading(true)
 
     try {
+      // Supabase will automatically send password reset email using your custom template
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
       })
 
       if (error) throw error
 
       onSuccess()
     } catch (err: any) {
-      toast.error(err.message)
-    } finally {
+      console.error('Forgot password error:', err)
+      toast.error(err.message || 'Failed to send reset email')
       onLoading(false)
     }
   }
@@ -65,7 +68,7 @@ export default function ForgotPasswordStep({
           placeholder="you@example.com"
           className="h-10 sm:h-12 mt-1 bg-background border-input text-sm sm:text-base text-foreground focus:border-transparent focus:ring-2 focus:ring-primary rounded-xl"
           disabled={loading}
-          onKeyDown={(e) => e.key === 'Enter' && handleForgotPassword()}
+          onKeyDown={(e) => e.key === 'Enter' && handleForgotPasswordSubmit()}
           autoFocus
         />
         <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
@@ -74,11 +77,15 @@ export default function ForgotPasswordStep({
       </div>
 
       <Button
-        onClick={handleForgotPassword}
+        onClick={handleForgotPasswordSubmit}
         disabled={loading}
         className="w-full h-10 sm:h-12 text-sm sm:text-base bg-primary text-primary-foreground font-semibold rounded-xl hover:brightness-110 transition-all"
       >
-        {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : 'Send reset link'}
+        {loading ? (
+          <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+        ) : (
+          'Send reset link'
+        )}
       </Button>
     </div>
   )

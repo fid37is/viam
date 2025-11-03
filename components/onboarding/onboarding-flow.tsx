@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -17,9 +17,10 @@ type OnboardingStep = 'name' | 'values' | 'deal-breakers' | 'work-preferences' |
 
 interface OnboardingFlowProps {
   user: User
+  verified?: boolean
 }
 
-export default function OnboardingFlow({ user }: OnboardingFlowProps) {
+export default function OnboardingFlow({ user, verified = false }: OnboardingFlowProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectAfter = searchParams.get('redirect')
@@ -35,6 +36,13 @@ export default function OnboardingFlow({ user }: OnboardingFlowProps) {
   const [workLocation, setWorkLocation] = useState<string>('')
   const [companySize, setCompanySize] = useState<string[]>([])
   const [industries, setIndustries] = useState<string[]>([])
+
+  // Show verification toast on mount if verified
+  useEffect(() => {
+    if (verified) {
+      toast.success('✅ Email verified! Let\'s complete your profile.')
+    }
+  }, [verified])
 
   const steps: OnboardingStep[] = ['name', 'values', 'deal-breakers', 'work-preferences', 'company-preferences']
   const currentStepIndex = steps.indexOf(currentStep)
