@@ -148,7 +148,7 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
   return (
     <form onSubmit={handleSavePreferences} className="space-y-6">
       {/* Career Values */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
+      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
         <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Career Values</h2>
         <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
           Select up to 5 values (currently {selectedValues.length} selected)
@@ -203,7 +203,7 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
       </div>
 
       {/* Deal Breakers */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
+      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
         <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Deal Breakers</h2>
         <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
           Select things you want to avoid (optional)
@@ -254,7 +254,7 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
       </div>
 
       {/* Work Location */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
+      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
         <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Work Location</h2>
         <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
           Your preferred work arrangement
@@ -291,7 +291,7 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
       </div>
 
       {/* Company Size */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
+      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
         <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Company Size</h2>
         <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
           Preferred company sizes (optional)
@@ -328,7 +328,7 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
       </div>
 
       {/* Industries */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
+      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
         <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Industries of Interest</h2>
         <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
           Industries you'd like to work in (optional)

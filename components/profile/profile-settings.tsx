@@ -350,7 +350,7 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
         {/* Account Settings */}
         {activeTab === 'account' && (
           <div className="space-y-6">
-            <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
+            <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
               <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-6">Account Information</h2>
 
               <form onSubmit={handleSaveAccount} className="space-y-6">
@@ -410,7 +410,7 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
               </form>
             </div>
 
-            <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
+            <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg sm:text-xl font-semibold text-foreground">Appearance</h2>
@@ -454,7 +454,7 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
 
             {/* Reactivation Button - Show only if account is deleted */}
             {profile?.account_status === 'deleted' && (
-              <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-amber-200 dark:border-amber-900/40">
+              <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-amber-200 dark:border-amber-900/40">
                 <h2 className="text-lg sm:text-xl font-semibold text-amber-900 dark:text-amber-100 mb-2">Account Reactivation</h2>
                 <p className="text-xs sm:text-sm md:text-base text-amber-800 dark:text-amber-200 mb-4">
                   Your account is scheduled for deletion. Reactivate it to keep your account and all your data.
@@ -477,7 +477,7 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
             )}
 
             {profile?.account_status !== 'deleted' && (
-              <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-destructive/20">
+              <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-destructive/20">
                 <h2 className="text-lg sm:text-xl font-semibold text-destructive mb-2">Danger Zone</h2>
                 <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
                   Once you delete your account, there is no going back. Please be certain.
@@ -497,7 +497,7 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
 
         {/* Password Settings */}
         {activeTab === 'password' && (
-          <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
+          <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
             <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-6">Change Password</h2>
 
             <div className="space-y-4">

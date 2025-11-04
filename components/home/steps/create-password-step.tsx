@@ -57,12 +57,16 @@ export default function CreatePasswordStep({
     onLoading(true)
 
     try {
-      // Create user account in Supabase
-      // Supabase will automatically send confirmation email using your custom template
+      // FIXED: Add emailRedirectTo to route through callback (same as Google SSO)
+      const redirectUrl = intentUpgrade
+        ? `${window.location.origin}/auth/callback?redirect=/subscription`
+        : `${window.location.origin}/auth/callback`
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: { intent_upgrade: intentUpgrade },
         },
       })

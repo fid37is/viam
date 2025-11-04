@@ -57,6 +57,11 @@ export async function GET(request: Request) {
         .eq('id', user.id)
         .single()
 
+      // Handle password recovery flow - skip onboarding check
+      if (type === 'recovery') {
+        return NextResponse.redirect(`${origin}/?type=recovery`)
+      }
+
       // Handle reactivation flow
       if (type === 'reactivate' && (profile?.account_status === 'hibernated' || profile?.account_status === 'deleted')) {
         // Check if deleted account is within grace period
@@ -91,7 +96,7 @@ export async function GET(request: Request) {
       const hasSubscriptionIntent = user.user_metadata?.intent_upgrade || redirectParam === '/subscription'
 
       // FIXED: Check if user needs onboarding based on profile completion status
-      // This handles both new users and existing users who haven't completed onboarding
+      // This handles both new users (Google SSO + Email/Password) and existing users who haven't completed onboarding
       const needsOnboarding = !profile || !profile.onboarding_completed
 
       if (needsOnboarding) {
@@ -100,7 +105,7 @@ export async function GET(request: Request) {
           // Preserve subscription intent and add verified flag
           return NextResponse.redirect(`${origin}/onboarding?redirect=/subscription&verified=true`)
         }
-        // Regular onboarding flow with verified flag
+        // Regular onboarding flow with verified flag for both Google SSO and Email verification
         return NextResponse.redirect(`${origin}/onboarding?verified=true`)
       }
 

@@ -30,6 +30,7 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('name')
   const [loading, setLoading] = useState(false)
   const [userName, setUserName] = useState('')
+  const [toastShown, setToastShown] = useState(false)
 
   // Form data
   const [selectedValues, setSelectedValues] = useState<string[]>([])
@@ -38,19 +39,41 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
   const [companySize, setCompanySize] = useState<string[]>([])
   const [industries, setIndustries] = useState<string[]>([])
 
-  // Show verification toast on mount if verified
+  // Show appropriate success toast on mount
   useEffect(() => {
-    if (verified) {
-      toast.success('✅ Email verified! Let\'s complete your profile.')
+    if (!toastShown && verified) {
+      checkAuthMethodAndShowToast()
+      setToastShown(true)
     }
-  }, [verified])
+  }, [verified, toastShown])
 
   // Show reactivation toast on mount if account was reactivated
   useEffect(() => {
-    if (reactivated === 'true') {
+    if (reactivated === 'true' && !toastShown) {
       toast.success('✅ Account reactivated! Welcome back.')
+      setToastShown(true)
     }
-  }, [reactivated])
+  }, [reactivated, toastShown])
+
+  const checkAuthMethodAndShowToast = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Check if user signed in with Google (app_metadata contains provider info)
+        const provider = user.app_metadata?.provider
+        
+        if (provider === 'google') {
+          toast.success('✅ Signed in with Google successfully!')
+        } else {
+          // Email/password verification
+          toast.success('✅ Email verified successfully!')
+        }
+      }
+    } catch (error) {
+      console.error('Error checking auth method:', error)
+    }
+  }
 
   const steps: OnboardingStep[] = ['name', 'values', 'deal-breakers', 'work-preferences', 'company-preferences']
   const currentStepIndex = steps.indexOf(currentStep)
