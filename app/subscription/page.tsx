@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CreditCard, AlertCircle, Check, Zap, TrendingUp, Calendar, Download, Crown, Loader2, ArrowRight, Settings, ArrowLeft, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { syncUserSubscription } from '@/lib/utils'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 
@@ -32,6 +33,7 @@ export default function BillingPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -47,6 +49,37 @@ export default function BillingPage() {
       fetchBillingData()
     }
   }, [user?.id])
+
+  // Sync subscription after successful upgrade
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const upgradeSuccess = params.get('upgrade') === 'success'
+
+    if (upgradeSuccess && user?.id && !isSyncing) {
+      console.log('🔄 Syncing subscription after successful upgrade...')
+      setIsSyncing(true)
+      
+      // Wait a moment for Stripe webhook to process
+      const timer = setTimeout(async () => {
+        const synced = await syncUserSubscription(user.id)
+
+        if (synced) {
+          console.log('✅ Subscription synced successfully')
+          // Refresh billing data
+          await fetchBillingData()
+          // Clear the URL param
+          window.history.replaceState({}, '', '/billing')
+          toast.success('Subscription updated! Premium features are now active.')
+        } else {
+          toast.error('Failed to sync subscription. Please refresh the page.')
+        }
+        
+        setIsSyncing(false)
+      }, 2000) // Wait 2 seconds for webhook to process
+
+      return () => clearTimeout(timer)
+    }
+  }, [user?.id, isSyncing])
 
   const fetchBillingData = async () => {
     if (!user?.id) return
@@ -110,23 +143,43 @@ export default function BillingPage() {
   const handleUpgradeToPremium = async () => {
     setActionLoading(true)
     try {
+      // Determine which price ID to use based on selected plan
+      let priceId = ''
+
+      if (selectedPlan === 'monthly') {
+        priceId = process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID || ''
+      } else if (selectedPlan === 'yearly') {
+        priceId = process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID || ''
+      }
+
+      if (!priceId) {
+        toast.error('Stripe pricing not configured. Please contact support.')
+        setActionLoading(false)
+        return
+      }
+
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id,
           email: user?.email,
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID
+          priceId,
+          billingCycle: selectedPlan
         })
       })
 
-      const { url } = await response.json()
-      
-      if (url) {
-        window.location.href = url
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      if (data.url) {
+        window.location.href = data.url
       }
     } catch (error: any) {
-      toast.error('Failed to start checkout process')
+      toast.error(error.message || 'Failed to start checkout process')
       console.error(error)
     } finally {
       setActionLoading(false)
@@ -148,6 +201,8 @@ export default function BillingPage() {
         toast.success('Subscription will be canceled at the end of the billing period')
         await fetchBillingData()
         setShowCancelModal(false)
+      } else {
+        throw new Error('Failed to cancel subscription')
       }
     } catch (error: any) {
       toast.error('Failed to cancel subscription')
@@ -171,6 +226,8 @@ export default function BillingPage() {
       if (response.ok) {
         toast.success('Subscription reactivated successfully!')
         await fetchBillingData()
+      } else {
+        throw new Error('Failed to reactivate subscription')
       }
     } catch (error: any) {
       toast.error('Failed to reactivate subscription')
@@ -190,10 +247,14 @@ export default function BillingPage() {
         })
       })
 
-      const { url } = await response.json()
-      
-      if (url) {
-        window.location.href = url
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to open payment portal')
+      }
+
+      if (data.url) {
+        window.location.href = data.url
       }
     } catch (error: any) {
       toast.error('Failed to open payment portal')
@@ -401,7 +462,7 @@ export default function BillingPage() {
                     <h3 className="text-xl font-semibold text-foreground mb-1">Yearly</h3>
                     <p className="text-sm text-muted-foreground mb-6">Best value</p>
                     
-                     <div className="mb-8">
+                    <div className="mb-8">
                       <div className="flex items-baseline gap-1">
                         <span className="text-4xl font-bold text-primary">$115</span>
                         <span className="text-muted-foreground">/yr</span>
@@ -559,7 +620,7 @@ export default function BillingPage() {
               <p className="text-muted-foreground">
                 {selectedPlan === 'monthly' 
                   ? '$12/month, cancel anytime'
-                  : '$144/year, save $36 (20% off)'
+                  : '$115/year (save $29 with 20% off)'
                 }
               </p>
             </div>

@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Plus, ChevronRight, AlertCircle, TrendingUp, Zap, Clock, X } from 'lucide-react'
+import { Plus, ChevronRight, AlertCircle, TrendingUp, Zap, Clock, X, Crown } from 'lucide-react'
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils'
+import { redirect } from 'next/navigation'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -11,11 +12,23 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Redirect if not authenticated
+  if (!user) {
+    redirect('/auth/login')
+  }
+
   // Fetch profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', user!.id)
+    .eq('id', user.id)
+    .single()
+
+  // Fetch subscription
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', user!.id)
     .single()
 
   // Check if account is scheduled for deletion
@@ -48,7 +61,7 @@ export default async function DashboardPage() {
   const { data: applications } = await supabase
     .from('applications')
     .select('*')
-    .eq('user_id', user!.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   // Calculate stats
@@ -75,6 +88,8 @@ export default async function DashboardPage() {
 
   const hasActionItems = oldApplications.length > 0 || notAppliedCount > 0 || highMatchApplications.length > 0
 
+  const isPremium = subscription?.tier === 'premium'
+
   return (
     <div className="space-y-6">
       {/* Deletion Warning */}
@@ -100,14 +115,56 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl shadow-sm border border-primary/20 p-4 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          Welcome back, {profile?.full_name || 'there'}!
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Track your job applications and land your next role
-        </p>
+      {/* Welcome Section with Subscription */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Welcome Card */}
+        <div className="lg:col-span-2 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl shadow-sm border border-primary/20 p-4 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+            Welcome back, {profile?.full_name || 'there'}!
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Track your job applications and land your next role
+          </p>
+        </div>
+
+        {/* Subscription Card */}
+        <Link href="/subscription" className="w-full">
+          <div className={`rounded-2xl shadow-sm border p-4 sm:p-6 h-full transition-all hover:shadow-md ${
+            isPremium
+              ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30'
+              : 'bg-card border-border hover:border-primary/30'
+          }`}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  isPremium ? 'bg-primary/20' : 'bg-muted'
+                }`}>
+                  <Crown className={`w-5 h-5 ${isPremium ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <div>
+                  <p className={`text-sm font-semibold ${isPremium ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {isPremium ? 'Premium' : 'Free'} Plan
+                  </p>
+                  {isPremium && subscription?.current_period_end ? (
+                    <p className="text-xs text-muted-foreground">
+                      Renews {new Date(subscription.current_period_end).toLocaleDateString()}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {isPremium ? 'Unlimited access' : 'Limited access'}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {!isPremium && (
+                <button className="text-xs font-semibold text-primary hover:underline whitespace-nowrap">
+                  Upgrade →
+                </button>
+              )}
+            </div>
+          </div>
+        </Link>
       </div>
 
       {/* Quick Stats */}

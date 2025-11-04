@@ -68,6 +68,13 @@ const INDUSTRIES = [
   { id: 'nonprofit', label: 'Non-Profit' },
 ]
 
+const MANAGEMENT_STYLES = [
+  { id: 'hands-off', label: 'Hands-off', description: 'Autonomous decision making' },
+  { id: 'collaborative', label: 'Collaborative', description: 'Team-based approach' },
+  { id: 'mentorship', label: 'Mentorship', description: 'Guidance and development' },
+  { id: 'results-oriented', label: 'Results-Oriented', description: 'Focus on outcomes' },
+]
+
 export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -85,6 +92,10 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
   const [industries, setIndustries] = useState<string[]>(
     profile?.preferred_industries || []
   )
+  const [managementStyle, setManagementStyle] = useState(profile?.management_style_preference || '')
+  const [shortTermGoal, setShortTermGoal] = useState(profile?.short_term_goal || '')
+  const [longTermGoal, setLongTermGoal] = useState(profile?.long_term_goal || '')
+  const [careerGoals, setCareerGoals] = useState(profile?.career_goals || '')
 
   const toggleValue = (valueId: string) => {
     if (selectedValues.includes(valueId)) {
@@ -120,8 +131,7 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
     }
   }
 
-  const handleSavePreferences = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSavePreferences = async () => {
     setLoading(true)
 
     try {
@@ -133,6 +143,10 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
           work_location_preference: workLocation,
           preferred_company_size: companySize,
           preferred_industries: industries,
+          management_style_preference: managementStyle,
+          short_term_goal: shortTermGoal,
+          long_term_goal: longTermGoal,
+          career_goals: careerGoals,
         })
         .eq('id', user.id)
 
@@ -146,15 +160,67 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
   }
 
   return (
-    <form onSubmit={handleSavePreferences} className="space-y-6">
-      {/* Career Values */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Career Values</h2>
-        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
-          Select up to 5 values (currently {selectedValues.length} selected)
+    <div className="space-y-8 max-w-6xl mx-auto">
+      {/* Career Goals Section */}
+      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground mb-1">Career Goals</h2>
+        <p className="text-sm text-muted-foreground mb-5">
+          Define your professional aspirations and direction
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="short-term" className="block text-sm font-medium text-foreground mb-2">
+              Short-term Goal (1-2 years)
+            </label>
+            <textarea
+              id="short-term"
+              value={shortTermGoal}
+              onChange={(e) => setShortTermGoal(e.target.value)}
+              placeholder="e.g., Master React and TypeScript, lead a project team"
+              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+              rows={2}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="long-term" className="block text-sm font-medium text-foreground mb-2">
+              Long-term Goal (3-5 years)
+            </label>
+            <textarea
+              id="long-term"
+              value={longTermGoal}
+              onChange={(e) => setLongTermGoal(e.target.value)}
+              placeholder="e.g., Become a Senior Engineering Manager, start own tech company"
+              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+              rows={2}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="career-goals" className="block text-sm font-medium text-foreground mb-2">
+              Overall Career Vision
+            </label>
+            <textarea
+              id="career-goals"
+              value={careerGoals}
+              onChange={(e) => setCareerGoals(e.target.value)}
+              placeholder="e.g., Build impactful products that solve real problems while maintaining work-life balance"
+              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+              rows={3}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Career Values */}
+      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground mb-1">Career Values</h2>
+        <p className="text-sm text-muted-foreground mb-5">
+          Select up to 5 values ({selectedValues.length}/5 selected)
+        </p>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {VALUES.map((value) => {
             const isSelected = selectedValues.includes(value.id)
             const isDisabled = !isSelected && selectedValues.length >= 5
@@ -166,31 +232,27 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
                 onClick={() => toggleValue(value.id)}
                 disabled={isDisabled}
                 className={`
-                  p-3 sm:p-3.5 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-2 text-left transition-all
+                  group relative p-3 rounded-lg border-2 text-left transition-all duration-200
                   ${isSelected
-                    ? 'border-primary bg-primary/5 shadow-sm'
+                    ? 'border-primary bg-primary/5'
                     : isDisabled
-                    ? 'border-border bg-muted/50 opacity-50 cursor-not-allowed'
-                    : 'border-border hover:border-primary/50 hover:bg-muted/30'
+                    ? 'border-border/50 bg-muted/30 opacity-50 cursor-not-allowed'
+                    : 'border-border/50 hover:border-primary/40 hover:bg-muted/50'
                   }
                 `}
-                style={isSelected ? { borderColor: 'hsl(var(--primary))' } : {}}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-xs sm:text-sm md:text-base text-foreground mb-0.5 sm:mb-1 break-words">
+                    <h3 className="font-medium text-sm text-foreground mb-0.5 leading-snug">
                       {value.label}
                     </h3>
-                    <p className="text-xs sm:text-xs md:text-sm text-muted-foreground break-words">
+                    <p className="text-xs text-muted-foreground leading-snug">
                       {value.description}
                     </p>
                   </div>
                   {isSelected && (
-                    <div 
-                      className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center ml-2 flex-shrink-0"
-                      style={{ backgroundColor: 'hsl(var(--primary))' }}
-                    >
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-2.5 h-2.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
@@ -203,13 +265,13 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
       </div>
 
       {/* Deal Breakers */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Deal Breakers</h2>
-        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
-          Select things you want to avoid (optional)
+      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground mb-1">Deal Breakers</h2>
+        <p className="text-sm text-muted-foreground mb-5">
+          Select factors you want to avoid
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {DEAL_BREAKERS.map((dealBreaker) => {
             const isSelected = selectedDealBreakers.includes(dealBreaker.id)
 
@@ -219,29 +281,25 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
                 type="button"
                 onClick={() => toggleDealBreaker(dealBreaker.id)}
                 className={`
-                  p-3 sm:p-3.5 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-2 text-left transition-all
+                  group relative p-3 rounded-lg border-2 text-left transition-all duration-200
                   ${isSelected
-                    ? 'border-destructive bg-destructive/5 shadow-sm'
-                    : 'border-border hover:border-destructive/50 hover:bg-muted/30'
+                    ? 'border-destructive bg-destructive/5'
+                    : 'border-border/50 hover:border-destructive/40 hover:bg-muted/50'
                   }
                 `}
-                style={isSelected ? { borderColor: 'hsl(var(--destructive))' } : {}}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-xs sm:text-sm md:text-base text-foreground mb-0.5 sm:mb-1 break-words">
+                    <h3 className="font-medium text-sm text-foreground mb-0.5 leading-snug">
                       {dealBreaker.label}
                     </h3>
-                    <p className="text-xs sm:text-xs md:text-sm text-muted-foreground break-words">
+                    <p className="text-xs text-muted-foreground leading-snug">
                       {dealBreaker.description}
                     </p>
                   </div>
                   {isSelected && (
-                    <div 
-                      className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center ml-2 flex-shrink-0"
-                      style={{ backgroundColor: 'hsl(var(--destructive))' }}
-                    >
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 text-destructive-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="w-4 h-4 rounded-full bg-destructive flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-2.5 h-2.5 text-destructive-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
@@ -253,51 +311,89 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
         </div>
       </div>
 
-      {/* Work Location */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Work Location</h2>
-        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
-          Your preferred work arrangement
-        </p>
+      {/* Work Preferences Grid */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Work Location */}
+        <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+          <h2 className="text-lg font-semibold text-foreground mb-1">Work Location</h2>
+          <p className="text-sm text-muted-foreground mb-5">
+            Your preferred arrangement
+          </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-          {WORK_LOCATIONS.map((location) => {
-            const isSelected = workLocation === location.id
+          <div className="grid grid-cols-2 gap-2.5">
+            {WORK_LOCATIONS.map((location) => {
+              const isSelected = workLocation === location.id
 
-            return (
-              <button
-                key={location.id}
-                type="button"
-                onClick={() => setWorkLocation(location.id)}
-                className={`
-                  p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl md:rounded-2xl border-2 text-center transition-all
-                  ${isSelected
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-border hover:border-primary/50 hover:bg-muted/30'
-                  }
-                `}
-                style={isSelected ? { borderColor: 'hsl(var(--primary))' } : {}}
-              >
-                <h3 className="font-semibold text-xs sm:text-sm md:text-base text-foreground mb-1 sm:mb-1.5 break-words">
-                  {location.label}
-                </h3>
-                <p className="text-xs sm:text-xs md:text-sm text-muted-foreground break-words">
-                  {location.description}
-                </p>
-              </button>
-            )
-          })}
+              return (
+                <button
+                  key={location.id}
+                  type="button"
+                  onClick={() => setWorkLocation(location.id)}
+                  className={`
+                    p-3 rounded-lg border-2 text-center transition-all duration-200
+                    ${isSelected
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border/50 hover:border-primary/40 hover:bg-muted/50'
+                    }
+                  `}
+                >
+                  <h3 className="font-medium text-sm text-foreground mb-0.5">
+                    {location.label}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {location.description}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Management Style */}
+        <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+          <h2 className="text-lg font-semibold text-foreground mb-1">Management Style</h2>
+          <p className="text-sm text-muted-foreground mb-5">
+            Preferred leadership approach
+          </p>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            {MANAGEMENT_STYLES.map((style) => {
+              const isSelected = managementStyle === style.id
+
+              return (
+                <button
+                  key={style.id}
+                  type="button"
+                  onClick={() => setManagementStyle(style.id)}
+                  className={`
+                    p-3 rounded-lg border-2 text-center transition-all duration-200
+                    ${isSelected
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border/50 hover:border-primary/40 hover:bg-muted/50'
+                    }
+                  `}
+                >
+                  <h3 className="font-medium text-sm text-foreground mb-0.5">
+                    {style.label}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {style.description}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
       {/* Company Size */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Company Size</h2>
-        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
-          Preferred company sizes (optional)
+      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground mb-1">Company Size</h2>
+        <p className="text-sm text-muted-foreground mb-5">
+          Preferred organization sizes
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {COMPANY_SIZES.map((size) => {
             const isSelected = companySize.includes(size.id)
 
@@ -307,18 +403,17 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
                 type="button"
                 onClick={() => toggleCompanySize(size.id)}
                 className={`
-                  p-2 sm:p-2.5 md:p-4 rounded-lg sm:rounded-lg md:rounded-xl border-2 text-center transition-all
+                  p-3 rounded-lg border-2 text-center transition-all duration-200
                   ${isSelected
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-border hover:border-primary/50 hover:bg-muted/30'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border/50 hover:border-primary/40 hover:bg-muted/50'
                   }
                 `}
-                style={isSelected ? { borderColor: 'hsl(var(--primary))' } : {}}
               >
-                <div className="text-xs sm:text-xs md:text-sm font-semibold text-foreground mb-0.5 sm:mb-1 break-words">
+                <div className="font-medium text-sm text-foreground mb-0.5">
                   {size.label}
                 </div>
-                <div className="text-xs md:text-xs text-muted-foreground break-words">
+                <div className="text-xs text-muted-foreground">
                   {size.description}
                 </div>
               </button>
@@ -328,13 +423,13 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
       </div>
 
       {/* Industries */}
-      <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Industries of Interest</h2>
-        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
-          Industries you'd like to work in (optional)
+      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground mb-1">Industries of Interest</h2>
+        <p className="text-sm text-muted-foreground mb-5">
+          Sectors you'd like to explore
         </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-2.5 md:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
           {INDUSTRIES.map((industry) => {
             const isSelected = industries.includes(industry.id)
 
@@ -344,15 +439,14 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
                 type="button"
                 onClick={() => toggleIndustry(industry.id)}
                 className={`
-                  p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-lg md:rounded-xl border-2 text-center transition-all
+                  px-3 py-2.5 rounded-lg border-2 text-center transition-all duration-200
                   ${isSelected
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-border hover:border-primary/50 hover:bg-muted/30'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border/50 hover:border-primary/40 hover:bg-muted/50'
                   }
                 `}
-                style={isSelected ? { borderColor: 'hsl(var(--primary))' } : {}}
               >
-                <div className="text-xs sm:text-xs md:text-sm font-semibold text-foreground break-words">
+                <div className="text-sm font-medium text-foreground">
                   {industry.label}
                 </div>
               </button>
@@ -362,25 +456,25 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <Button
-          type="submit"
+          onClick={handleSavePreferences}
           disabled={loading}
-          className="h-9 sm:h-10 md:h-12 px-6 sm:px-8 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm md:text-base"
+          className="h-11 px-8 bg-primary text-primary-foreground font-medium rounded-lg hover:opacity-90 transition-opacity"
         >
           {loading ? (
             <>
-              <Loader2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
               Saving...
             </>
           ) : (
             <>
-              <CheckCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
+              <CheckCircle className="w-4 h-4 mr-2" />
               Save Preferences
             </>
           )}
         </Button>
       </div>
-    </form>
+    </div>
   )
 }

@@ -9,12 +9,26 @@ export default function HomeHero() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
+  const getPriceId = (cycle: 'monthly' | 'yearly'): string | null => {
+    if (cycle === 'monthly') {
+      return process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID || null
+    } else {
+      return process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID || null
+    }
+  }
+
   const handleUpgradeClick = () => {
+    const priceId = getPriceId(billingCycle)
     const url = new URL(window.location.href)
     url.searchParams.set('upgrade', 'true')
     url.searchParams.set('plan', billingCycle)
+    if (priceId) {
+      url.searchParams.set('priceId', priceId)
+    }
     window.history.pushState({}, '', url)
-    window.dispatchEvent(new CustomEvent('upgrade-intent'))
+    window.dispatchEvent(new CustomEvent('upgrade-intent', { 
+      detail: { billingCycle, priceId } 
+    }))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
