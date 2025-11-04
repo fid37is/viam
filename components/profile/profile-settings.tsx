@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Settings, Mail, Briefcase, CheckCircle, Trash2, Moon, Sun, Monitor, Lock, Eye, EyeOff, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Profile } from '@/lib/supabase/types'
-import type { User } from '@supabase/supabase-js'
+import type { User } from '@supabase/supabase-js';
+import PreferencesTab from '@/components/profile/preferenceTab';
+
 
 interface ProfileSettingsProps {
   profile: Profile | null
@@ -314,8 +316,8 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
         <button
           onClick={() => setActiveTab('account')}
           className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all ${activeTab === 'account'
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:bg-muted'
+            ? 'bg-primary text-primary-foreground'
+            : 'text-muted-foreground hover:bg-muted'
             }`}
         >
           <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
@@ -324,8 +326,8 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
         <button
           onClick={() => setActiveTab('preferences')}
           className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all ${activeTab === 'preferences'
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:bg-muted'
+            ? 'bg-primary text-primary-foreground'
+            : 'text-muted-foreground hover:bg-muted'
             }`}
         >
           <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
@@ -334,8 +336,8 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
         <button
           onClick={() => setActiveTab('password')}
           className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all ${activeTab === 'password'
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:bg-muted'
+            ? 'bg-primary text-primary-foreground'
+            : 'text-muted-foreground hover:bg-muted'
             }`}
         >
           <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
@@ -419,8 +421,8 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
                   <button
                     onClick={() => applyTheme('light')}
                     className={`p-2 sm:p-2.5 rounded-lg transition-all ${theme === 'light'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-background'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-background'
                       }`}
                     title="Light theme"
                   >
@@ -429,8 +431,8 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
                   <button
                     onClick={() => applyTheme('dark')}
                     className={`p-2 sm:p-2.5 rounded-lg transition-all ${theme === 'dark'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-background'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-background'
                       }`}
                     title="Dark theme"
                   >
@@ -439,8 +441,8 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
                   <button
                     onClick={() => applyTheme('system')}
                     className={`p-2 sm:p-2.5 rounded-lg transition-all ${theme === 'system'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-background'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-background'
                       }`}
                     title="System theme"
                   >
@@ -604,87 +606,9 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
 
         {/* Preferences */}
         {activeTab === 'preferences' && (
-          <form onSubmit={handleSavePreferences} className="space-y-6">
-            <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Career Values</h2>
-              <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
-                Select up to 5 values (currently {selectedValues.length} selected)
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-                {DEAL_BREAKERS.map((dealBreaker) => {
-                  const isSelected = selectedDealBreakers.includes(dealBreaker.id)
-
-                  return (
-                    <button
-                      key={dealBreaker.id}
-                      type="button"
-                      onClick={() => toggleDealBreaker(dealBreaker.id)}
-                      className={`p-3 sm:p-3.5 md:p-4 rounded-lg sm:rounded-xl border-2 text-left transition-all ${isSelected
-                          ? 'border-destructive bg-destructive/5'
-                          : 'border-border hover:border-destructive/50 hover:bg-muted'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm md:text-base font-medium text-foreground">{dealBreaker.label}</span>
-                        {isSelected && (
-                          <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-destructive flex-shrink-0 ml-2" />
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border">
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Work Location</h2>
-              <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6">
-                Your preferred work arrangement
-              </p>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-                {WORK_LOCATIONS.map((location) => {
-                  const isSelected = workLocation === location.id
-
-                  return (
-                    <button
-                      key={location.id}
-                      type="button"
-                      onClick={() => setWorkLocation(location.id)}
-                      className={`p-3 sm:p-3.5 md:p-4 rounded-lg sm:rounded-xl border-2 text-center transition-all ${isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50 hover:bg-muted'
-                        }`}
-                    >
-                      <span className="text-xs sm:text-sm md:text-base font-medium text-foreground">{location.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="h-9 sm:h-10 md:h-12 px-6 sm:px-8 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm md:text-base"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
-                    Save Preferences
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
+          <PreferencesTab profile={profile} user={user} />
         )}
+
       </div>
 
       {/* Delete Account Dialog */}
@@ -701,8 +625,8 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
               <button
                 onClick={() => setDeleteChoice('hibernate')}
                 className={`w-full p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 text-left transition-all ${deleteChoice === 'hibernate'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50 hover:bg-muted'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-primary/50 hover:bg-muted'
                   }`}
               >
                 <p className="font-semibold text-xs sm:text-sm md:text-base text-foreground">Hibernate Account</p>
@@ -712,8 +636,8 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
               <button
                 onClick={() => setDeleteChoice('delete')}
                 className={`w-full p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 text-left transition-all ${deleteChoice === 'delete'
-                    ? 'border-destructive bg-destructive/5'
-                    : 'border-border hover:border-destructive/50 hover:bg-muted'
+                  ? 'border-destructive bg-destructive/5'
+                  : 'border-border hover:border-destructive/50 hover:bg-muted'
                   }`}
               >
                 <p className="font-semibold text-xs sm:text-sm md:text-base text-destructive">Delete Account (30-day grace)</p>
