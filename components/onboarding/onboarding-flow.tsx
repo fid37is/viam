@@ -64,10 +64,10 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
         const provider = user.app_metadata?.provider
         
         if (provider === 'google') {
-          toast.success('✅ Signed in with Google successfully!')
+          toast.success('Signed in with Google successfully!')
         } else {
           // Email/password verification
-          toast.success('✅ Email verified successfully!')
+          toast.success('Email verified successfully!')
         }
       }
     } catch (error) {
@@ -147,7 +147,7 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
 
       if (error) throw error
 
-      toast.success('🎉 Registration complete! Welcome to Owtras')
+      toast.success('🎉 Registration complete! Welcome to Owtra')
 
       const destination = redirectAfter || '/dashboard'
       router.push(destination)
@@ -171,7 +171,7 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
           )}
           {currentStep === 'name' && (
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2">
-              Welcome to Owtras! 👋
+              Welcome to Owtra! 👋
             </h1>
           )}
           <p className="text-xs sm:text-sm md:text-base text-muted-foreground">

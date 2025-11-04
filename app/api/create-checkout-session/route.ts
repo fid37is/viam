@@ -1,4 +1,5 @@
-// app/api/create-checkout-session/route.ts
+// app/api/create-checkout-session/route.ts - ADD THIS AFTER SUCCESSFUL CHECKOUT
+
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe-client'
 import { createClient } from '@/lib/supabase/server'
@@ -6,19 +7,24 @@ import { createClient } from '@/lib/supabase/server'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { userId, email, priceId } = body
+    const { userId, email, priceId, billingCycle } = body
 
-    console.log('Checkout request:', { userId, email, priceId })
+    console.log('Checkout request:', { userId, email, priceId, billingCycle })
 
-    // Validate required fields
-    if (!userId || !email || !priceId) {
+    if (!userId || !email || !priceId || !billingCycle) {
       return NextResponse.json(
-        { error: 'Missing required fields: userId, email, priceId' },
+        { error: 'Missing required fields: userId, email, priceId, billingCycle' },
         { status: 400 }
       )
     }
 
-    // Validate environment variables
+    if (!['monthly', 'yearly'].includes(billingCycle)) {
+      return NextResponse.json(
+        { error: 'Invalid billing cycle. Must be "monthly" or "yearly"' },
+        { status: 400 }
+      )
+    }
+
     if (!process.env.STRIPE_SECRET_KEY) {
       console.error('Missing STRIPE_SECRET_KEY')
       return NextResponse.json(
@@ -30,8 +36,6 @@ export async function POST(req: NextRequest) {
     const origin = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'http://localhost:3000'
     const baseUrl = origin.startsWith('http') ? origin : `https://${origin}`
 
-    console.log('Using base URL:', baseUrl)
-
     const supabase = await createClient()
     
     // Get or create Stripe customer
@@ -39,7 +43,7 @@ export async function POST(req: NextRequest) {
       .from('subscriptions')
       .select('stripe_customer_id')
       .eq('user_id', userId)
-      .maybeSingle() // Use maybeSingle instead of single to avoid error if no record
+      .maybeSingle()
 
     if (subError) {
       console.error('Supabase error:', subError)
@@ -51,32 +55,32 @@ export async function POST(req: NextRequest) {
 
     let customerId = subscription?.stripe_customer_id
 
-    console.log('Existing customer ID:', customerId)
-
     if (!customerId) {
-      console.log('Creating new Stripe customer...')
-      
       const customer = await stripe.customers.create({
         email,
         metadata: { userId }
       })
       
       customerId = customer.id
-      console.log('Created customer:', customerId)
 
-      // Update subscription record with customer ID
+      // Upsert subscription record with customer ID
       const { error: updateError } = await supabase
         .from('subscriptions')
-        .update({ stripe_customer_id: customerId })
-        .eq('user_id', userId)
+        .upsert(
+          {
+            user_id: userId,
+            stripe_customer_id: customerId,
+            tier: 'free',
+            billing_cycle: null,
+            status: 'active'
+          },
+          { onConflict: 'user_id' }
+        )
 
       if (updateError) {
-        console.error('Failed to update subscription:', updateError)
-        // Continue anyway - we have the customer ID
+        console.error('Failed to create subscription record:', updateError)
       }
     }
-
-    console.log('Creating checkout session...')
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -90,8 +94,11 @@ export async function POST(req: NextRequest) {
       mode: 'subscription',
       success_url: `${baseUrl}/dashboard?upgrade=success`,
       cancel_url: `${baseUrl}/billing?upgrade=canceled`,
-      metadata: { userId },
-      allow_promotion_codes: true, // Optional: allow promo codes
+      metadata: {
+        userId,
+        billingCycle
+      },
+      allow_promotion_codes: true,
     })
 
     console.log('Checkout session created:', session.id)
@@ -100,12 +107,78 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Checkout session error:', error)
     
-    // Return more specific error info
     return NextResponse.json(
       { 
         error: error.message || 'Failed to create checkout session',
         details: error.type || 'unknown_error'
       },
+      { status: 500 }
+    )
+  }
+}
+
+// NEW: Add a route to manually update profile based on subscription status
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const { userId } = body
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'userId is required' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = await createClient()
+
+    // Get subscription data from Stripe via Supabase
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (subError || !subscription) {
+      console.error('Subscription not found:', subError)
+      return NextResponse.json(
+        { error: 'Subscription not found' },
+        { status: 404 }
+      )
+    }
+
+    // Determine tier based on subscription
+    const tier = subscription.tier || 'free'
+
+    // Update profile with subscription tier
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        subscription_tier: tier,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+
+    if (profileError) {
+      console.error('Failed to update profile:', profileError)
+      return NextResponse.json(
+        { error: 'Failed to update profile' },
+        { status: 500 }
+      )
+    }
+
+    console.log('Profile updated:', profileData)
+
+    return NextResponse.json({ 
+      success: true, 
+      profile: profileData,
+      subscription: subscription
+    })
+  } catch (error: any) {
+    console.error('Profile update error:', error)
+    return NextResponse.json(
+      { error: error.message },
       { status: 500 }
     )
   }

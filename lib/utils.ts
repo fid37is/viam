@@ -1,3 +1,4 @@
+//lib/utils
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -108,4 +109,27 @@ export function capitalizeFirst(str: string | null): string {
 export function pluralize(count: number, singular: string, plural?: string): string {
   if (count === 1) return singular
   return plural || `${singular}s`
+}
+
+export async function syncUserSubscription(userId: string) {
+  try {
+    const response = await fetch('/api/sync-subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error('Sync failed:', data)
+      return false
+    }
+
+    console.log('✅ Subscription synced:', data)
+    return true
+  } catch (error) {
+    console.error('Sync error:', error)
+    return false
+  }
 }

@@ -387,6 +387,7 @@ export type Database = {
           work_location_preference: string | null
           account_status: 'active' | 'hibernated' | 'deleted'
           deletion_scheduled_at: string | null
+          subscription_tier: string | null
         }
         Insert: {
           career_goals?: string | null
@@ -441,6 +442,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           tier: string
+          billing_cycle?: string | null
           updated_at: string | null
           user_id: string
         }
@@ -454,6 +456,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           tier?: string
+          billing_cycle?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -467,6 +470,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           tier?: string
+          billing_cycle?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -628,6 +632,7 @@ export const Constants = {
   },
 } as const
 
+
 // Helper type exports
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Subscription = Database['public']['Tables']['subscriptions']['Row']
@@ -637,3 +642,35 @@ export type Invoice = Database['public']['Tables']['invoices']['Row']
 export type Application = Database['public']['Tables']['applications']['Row']
 export type Company = Database['public']['Tables']['companies']['Row']
 export type ActivityLog = Database['public']['Tables']['activity_log']['Row']
+
+// Billing cycle type
+export type BillingCycle = 'monthly' | 'yearly'
+export type SubscriptionTier = 'free' | 'premium'
+export type SubscriptionStatus = 'active' | 'canceled' | 'past_due'
+
+// Subscription with typed fields
+export type SubscriptionWithTypes = Omit<Subscription, 'tier' | 'billing_cycle' | 'status'> & {
+  tier: SubscriptionTier
+  billing_cycle: BillingCycle | null
+  status: SubscriptionStatus
+}
+
+// Checkout session request type
+export type CheckoutSessionRequest = {
+  userId: string
+  email: string
+  priceId: string
+  billingCycle: BillingCycle
+}
+
+// Price configuration type
+export type PriceConfig = {
+  monthlyPriceId: string
+  yearlyPriceId: string
+}
+
+// Stripe webhook event metadata
+export type StripeSubscriptionMetadata = {
+  userId: string
+  billingCycle?: BillingCycle
+}
