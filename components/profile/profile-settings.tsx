@@ -4,52 +4,18 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Loader2, Settings, Mail, Briefcase, CheckCircle, Trash2, Moon, Sun, Monitor, Lock, Eye, EyeOff, RotateCcw } from 'lucide-react'
+import { Loader2, Settings, Mail, Briefcase, CheckCircle, Trash2, Moon, Sun, Monitor, Lock, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Profile } from '@/lib/supabase/types'
-import type { User } from '@supabase/supabase-js';
-import PreferencesTab from '@/components/profile/preferenceTab';
+import type { User } from '@supabase/supabase-js'
+import PreferencesTab from '@/components/profile/preferenceTab'
+import PasswordTab from './passwordTab'
 
 
 interface ProfileSettingsProps {
   profile: Profile | null
   user: User
 }
-
-const VALUES = [
-  { id: 'mission-driven', label: 'Mission-Driven Work' },
-  { id: 'work-life-balance', label: 'Work-Life Balance' },
-  { id: 'high-compensation', label: 'High Compensation' },
-  { id: 'career-growth', label: 'Career Growth' },
-  { id: 'innovation', label: 'Innovation' },
-  { id: 'dei-commitment', label: 'DEI Commitment' },
-  { id: 'remote-work', label: 'Remote Work' },
-  { id: 'team-culture', label: 'Team Culture' },
-  { id: 'learning-opportunities', label: 'Learning & Development' },
-  { id: 'impact', label: 'Direct Impact' },
-  { id: 'job-security', label: 'Job Security' },
-  { id: 'autonomy', label: 'Autonomy' },
-]
-
-const DEAL_BREAKERS = [
-  { id: 'no-remote', label: 'No Remote Options' },
-  { id: 'long-hours', label: 'Long Hours' },
-  { id: 'poor-dei', label: 'Poor DEI Record' },
-  { id: 'unclear-mission', label: 'Unclear Mission' },
-  { id: 'low-growth', label: 'Limited Growth' },
-  { id: 'micromanagement', label: 'Micromanagement' },
-  { id: 'poor-reviews', label: 'Poor Employee Reviews' },
-  { id: 'unstable-funding', label: 'Unstable Funding' },
-  { id: 'toxic-culture', label: 'Toxic Culture' },
-  { id: 'no-benefits', label: 'Limited Benefits' },
-]
-
-const WORK_LOCATIONS = [
-  { id: 'remote', label: 'Fully Remote' },
-  { id: 'hybrid', label: 'Hybrid' },
-  { id: 'office', label: 'In Office' },
-  { id: 'flexible', label: 'Flexible' },
-]
 
 export default function ProfileSettings({ profile, user }: ProfileSettingsProps) {
   const supabase = createClient()
@@ -63,21 +29,6 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
 
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [email] = useState(user.email || '')
-
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmNewPassword, setConfirmNewPassword] = useState('')
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  const [selectedValues, setSelectedValues] = useState<string[]>(
-    (profile?.top_values as string[]) || []
-  )
-  const [selectedDealBreakers, setSelectedDealBreakers] = useState<string[]>(
-    (profile?.deal_breakers as string[]) || []
-  )
-  const [workLocation, setWorkLocation] = useState(profile?.work_location_preference || '')
 
   const handleSaveAccount = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,84 +44,6 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
       toast.success('Account updated successfully!')
     } catch (err: any) {
       toast.error(err.message || 'Failed to update account')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmNewPassword) {
-      toast.error('Please fill in all password fields')
-      return
-    }
-
-    if (newPassword.length < 6) {
-      toast.error('New password must be at least 6 characters')
-      return
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      toast.error('New passwords do not match')
-      return
-    }
-
-    if (currentPassword === newPassword) {
-      toast.error('New password must be different from current password')
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email || '',
-        password: currentPassword,
-      })
-
-      if (signInError) {
-        toast.error('Current password is incorrect')
-        setLoading(false)
-        return
-      }
-
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      })
-
-      if (updateError) throw updateError
-
-      toast.success('Password changed successfully!')
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmNewPassword('')
-      setShowCurrentPassword(false)
-      setShowNewPassword(false)
-      setShowConfirmPassword(false)
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to change password')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSavePreferences = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          top_values: selectedValues,
-          deal_breakers: selectedDealBreakers,
-          work_location_preference: workLocation,
-        })
-        .eq('id', user.id)
-
-      if (error) throw error
-      toast.success('Preferences updated successfully!')
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update preferences')
     } finally {
       setLoading(false)
     }
@@ -204,7 +77,6 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
 
         const userName = fullName || user.email?.split('@')[0]
 
-        // Send hibernation email via Supabase
         const response = await fetch('/api/send-notification-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -241,7 +113,6 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
 
         const userName = fullName || user.email?.split('@')[0]
 
-        // Send deletion email via Resend
         const response = await fetch('/api/send-notification-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -271,24 +142,6 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
       toast.error(err.message || 'Failed to process account action')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const toggleValue = (valueId: string) => {
-    if (selectedValues.includes(valueId)) {
-      setSelectedValues(selectedValues.filter(id => id !== valueId))
-    } else {
-      if (selectedValues.length < 5) {
-        setSelectedValues([...selectedValues, valueId])
-      }
-    }
-  }
-
-  const toggleDealBreaker = (id: string) => {
-    if (selectedDealBreakers.includes(id)) {
-      setSelectedDealBreakers(selectedDealBreakers.filter(item => item !== id))
-    } else {
-      setSelectedDealBreakers([...selectedDealBreakers, id])
     }
   }
 
@@ -496,113 +349,7 @@ export default function ProfileSettings({ profile, user }: ProfileSettingsProps)
         )}
 
         {/* Password Settings */}
-        {activeTab === 'password' && (
-          <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border">
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-6">Change Password</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="current-pwd" className="text-xs sm:text-sm md:text-base text-foreground font-semibold block mb-2">
-                  Current Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="current-pwd"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="h-9 sm:h-10 md:h-12 w-full pl-4 pr-10 border border-border focus:border-transparent focus:ring-2 focus:ring-primary rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base"
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-muted rounded-lg"
-                    tabIndex={-1}
-                  >
-                    {showCurrentPassword ? (
-                      <EyeOff className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                    ) : (
-                      <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="new-pwd" className="text-xs sm:text-sm md:text-base text-foreground font-semibold block mb-2">
-                  New Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="new-pwd"
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="h-9 sm:h-10 md:h-12 w-full pl-4 pr-10 border border-border focus:border-transparent focus:ring-2 focus:ring-primary rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base"
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-muted rounded-lg"
-                    tabIndex={-1}
-                  >
-                    {showNewPassword ? (
-                      <EyeOff className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                    ) : (
-                      <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">Must be at least 6 characters</p>
-              </div>
-
-              <div>
-                <label htmlFor="confirm-pwd" className="text-xs sm:text-sm md:text-base text-foreground font-semibold block mb-2">
-                  Confirm New Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirm-pwd"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={confirmNewPassword}
-                    onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="h-9 sm:h-10 md:h-12 w-full pl-4 pr-10 border border-border focus:border-transparent focus:ring-2 focus:ring-primary rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base"
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-muted rounded-lg"
-                    tabIndex={-1}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                    ) : (
-                      <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleChangePassword}
-                disabled={loading}
-                className="w-full h-9 sm:h-10 md:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm md:text-base"
-              >
-                {loading ? (
-                  <Loader2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 animate-spin" />
-                ) : (
-                  'Change Password'
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
+        {activeTab === 'password' && <PasswordTab user={user} />}
 
         {/* Preferences */}
         {activeTab === 'preferences' && (

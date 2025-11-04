@@ -81,6 +81,9 @@ export default function DashboardNav({ user }: DashboardNavProps) {
                   />
                 )}
               </div>
+              <span className="text-xl sm:text-2xl font-bold text-foreground leading-none">
+              Owtra
+            </span>
             </Link>
           </div>
 

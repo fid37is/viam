@@ -143,6 +143,12 @@ export default function BillingPage() {
   const handleUpgradeToPremium = async () => {
     setActionLoading(true)
     try {
+      // Show user-friendly message instead of error
+      toast.info('Please continue enjoying the free plan for the time being.')
+      setShowUpgradeModal(false)
+      setActionLoading(false)
+      return
+
       // Determine which price ID to use based on selected plan
       let priceId = ''
 

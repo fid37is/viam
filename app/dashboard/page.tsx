@@ -120,7 +120,7 @@ export default async function DashboardPage() {
         {/* Welcome Card */}
         <div className="lg:col-span-2 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl shadow-sm border border-primary/20 p-4 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Welcome back, {profile?.full_name || 'there'}!
+            Welcome, {profile?.full_name || 'there'}!
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             Track your job applications and land your next role
