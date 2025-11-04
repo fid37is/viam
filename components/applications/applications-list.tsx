@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Application } from '@/lib/supabase/types'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Search, Calendar, MapPin, Trash2, AlertCircle, Loader2, X } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils'
@@ -238,17 +245,18 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
           </div>
 
           {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-12 px-4 border border-border rounded-xl focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none bg-background text-foreground"
-          >
-            {STATUS_FILTERS.map((filter) => (
-              <option key={filter.value} value={filter.value}>
-                {filter.label}
-              </option>
-            ))}
-          </select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-12 border-input">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTERS.map((filter) => (
+                <SelectItem key={filter.value} value={filter.value}>
+                  {filter.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Sort Options */}

@@ -71,7 +71,7 @@ export default function HomeHero() {
                     Owtra
                   </h1>
                   <p className="text-lg sm:text-2xl lg:text-3xl text-muted-foreground font-light max-w-2xl leading-relaxed">
-                    Trail your every job application with intelligent tracking and insights
+                    Smart tracking and insights for every job application.
                   </p>
                   
                   <div className="absolute bottom-6 sm:bottom-12 left-1/2 transform -translate-x-1/2 animate-bounce">
@@ -99,10 +99,10 @@ export default function HomeHero() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <FeatureCard icon={<Target className="w-6 h-6 sm:w-8 sm:h-8" />} title="Smart Matching" description="AI-powered insights analyze company culture, values, and growth trajectory to help you discover roles that truly align with your career goals and aspirations." color="primary" />
-            <FeatureCard icon={<BarChart3 className="w-6 h-6 sm:w-8 sm:h-8" />} title="Organized Tracking" description="Centralize all your applications, interview notes, contacts, and research in one intuitive dashboard that grows with your job search journey." color="accent" />
-            <FeatureCard icon={<Bell className="w-6 h-6 sm:w-8 sm:h-8" />} title="Never Miss Out" description="Smart reminders keep you on track with follow-ups, interview prep, thank-you notes, and application deadlines so opportunities never slip through." color="secondary" />
-            <FeatureCard icon={<Search className="w-6 h-6 sm:w-8 sm:h-8" />} title="Company Insights" description="Get instant access to funding rounds, team size, tech stack, recent news, and culture reviews for every company you're considering." color="primary" />
+            <FeatureCard icon={<Target className="w-6 h-6 sm:w-8 sm:h-8" />} title="Smart Matching" description="See how well you match the role, understand the company, and predict response chances, before or after applying." color="primary" />
+            <FeatureCard icon={<BarChart3 className="w-6 h-6 sm:w-8 sm:h-8" />} title="Organized Tracking" description="Centralize your applications, contacts, and company research in a dashboard tailored to your job-search style." color="accent" />
+            <FeatureCard icon={<Bell className="w-6 h-6 sm:w-8 sm:h-8" />} title="Interview Ready" description="Walk into interviews prepared with tailored questions, answers, and insights as soon as you're shortlisted." color="secondary" />
+            <FeatureCard icon={<Search className="w-6 h-6 sm:w-8 sm:h-8" />} title="Company Insights" description="Instantly learn about company culture, values, team structure, leadership, and workplace experience to make informed career decisions." color="primary" />
             <FeatureCard icon={<TrendingUp className="w-6 h-6 sm:w-8 sm:h-8" />} title="Track Progress" description="Visualize your application-to-interview conversion rates, identify successful strategies, and optimize your approach with detailed analytics." color="accent" />
             <FeatureCard icon={<Zap className="w-6 h-6 sm:w-8 sm:h-8" />} title="Lightning Fast" description="Add applications in seconds with smart job posting parsers that automatically extract company details, role info, and requirements." color="secondary" />
           </div>
@@ -125,7 +125,7 @@ export default function HomeHero() {
             <div className="space-y-4 sm:space-y-6">
               <h3 className="text-2xl sm:text-3xl font-bold text-foreground">Our Story</h3>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                Owtra was born from the frustration of managing dozens of job applications across multiple platforms. We realized that job seekers needed a centralized, intelligent system to track their journey and maximize their chances of success.
+                Owtra was born from the frustration of managing dozens of job applications on spreedsheets. We realized that job seekers needed a centralized, intelligent system to track their journey and maximize their chances of success.
               </p>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
                 Today, we help thousands of professionals organize their job search, discover better opportunities, and land roles at companies they love. Our AI-powered platform learns from successful job searches to give you personalized insights and recommendations.
