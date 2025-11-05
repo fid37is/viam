@@ -388,6 +388,7 @@ export type Database = {
           account_status: 'active' | 'hibernated' | 'deleted'
           deletion_scheduled_at: string | null
           subscription_tier: string | null
+          is_admin: boolean | null 
         }
         Insert: {
           career_goals?: string | null
@@ -408,6 +409,7 @@ export type Database = {
           work_location_preference?: string | null
           account_status?: 'active' | 'hibernated' | 'deleted'
           deletion_scheduled_at?: string | null
+          is_admin?: boolean | null
         }
         Update: {
           career_goals?: string | null
@@ -428,6 +430,7 @@ export type Database = {
           work_location_preference?: string | null
           account_status?: 'active' | 'hibernated' | 'deleted'
           deletion_scheduled_at?: string | null
+          is_admin?: boolean | null 
         }
         Relationships: []
       }

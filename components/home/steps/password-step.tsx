@@ -1,10 +1,9 @@
-// ============================================================
-// FILE: app/components/auth/steps/password-step.tsx
-// ============================================================
+// app/components/auth/steps/password-step.tsx
 
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,6 +35,7 @@ export default function PasswordStep({
   onLoading,
 }: PasswordStepProps) {
   const supabase = createClient()
+  const router = useRouter()
 
   // Extract name from email (everything before @)
   const userName = email.split('@')[0]
@@ -49,7 +49,7 @@ export default function PasswordStep({
     onLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -66,7 +66,35 @@ export default function PasswordStep({
         return
       }
 
-      onSuccess()
+      // Check if user is admin
+      if (user) {
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
+
+          console.log('Profile check - is_admin:', profile?.is_admin, 'Error:', profileError)
+
+          if (profile?.is_admin === true) {
+            console.log('User is admin, redirecting to /admin')
+            toast.success('Welcome back, Admin!')
+            router.push('/admin')
+          } else {
+            console.log('User is not admin, redirecting to /dashboard')
+            toast.success('Welcome back!')
+            router.push('/dashboard')
+          }
+        } catch (err) {
+          console.error('Unexpected error checking admin status:', err)
+          toast.success('Welcome back!')
+          router.push('/dashboard')
+        }
+        
+        router.refresh()
+        onLoading(false)
+      }
     } catch (err: any) {
       toast.error(err.message)
       onLoading(false)
