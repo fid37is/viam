@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 
   // Redirect if not authenticated
   if (!user) {
-    redirect('/auth/login')
+    redirect('/')
   }
 
   // Fetch profile
