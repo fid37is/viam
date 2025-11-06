@@ -12,8 +12,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 174 12% 29%;
     
-    /* Primary: #28c7fa (Bright Cyan Blue) - HSL: 195 95% 57% */
-    --primary: 195 95% 57%;
+    /* Primary: #1769ff (Blue) - HSL: 219 100% 55% */
+    --primary: 219 100% 55%;
     --primary-foreground: 0 0% 100%;
     
     /* Secondary: #ff304f (Red/Pink) - HSL: 349 100% 59% */
@@ -34,7 +34,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 195 95% 57%;
+    --ring: 219 100% 55%;
     --radius: 0.5rem;
   }
 
@@ -47,8 +47,8 @@
     --popover: 210 100% 12%;
     --popover-foreground: 0 0% 95%;
     
-    /* Primary: #28c7fa (Bright Cyan Blue) */
-    --primary: 195 95% 57%;
+    /* Primary: #1769ff (Blue) */
+    --primary: 219 100% 55%;
     --primary-foreground: 0 0% 100%;
     
     /* Secondary: #ff304f (Red/Pink) */
@@ -69,7 +69,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 210 50% 20%;
     --input: 210 50% 20%;
-    --ring: 195 95% 57%;
+    --ring: 219 100% 55%;
   }
 }
 
@@ -98,7 +98,7 @@
   }
 
   .toast[data-type="info"] {
-    color: #28c7fa !important;
+    color: #1769ff !important;
   }
 }
 
