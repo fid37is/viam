@@ -4,11 +4,11 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Database } from '@/lib/supabase/types'
 import { Button } from '@/components/ui/button'
-import { 
-  ArrowLeft, 
-  ExternalLink, 
-  Calendar, 
-  MapPin, 
+import {
+  ArrowLeft,
+  ExternalLink,
+  Calendar,
+  MapPin,
   Building2,
   Edit,
   Trash2,
@@ -37,7 +37,7 @@ function formatJobDescription(description: string) {
   if (!description) return null
 
   const lines = description.split('\n').filter(line => line.trim())
-  
+
   const formattedContent: React.ReactElement[] = []
   let currentList: string[] = []
   let listType: 'bullet' | 'number' | null = null
@@ -58,7 +58,7 @@ function formatJobDescription(description: string) {
 
   lines.forEach((line, index) => {
     const trimmed = line.trim()
-    
+
     if (/^[•\-\*]\s+/.test(trimmed)) {
       const text = trimmed.replace(/^[•\-\*]\s+/, '')
       currentList.push(text)
@@ -169,7 +169,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
               </h1>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
                 {application.company?.slug ? (
-                  <Link 
+                  <Link
                     href={`/dashboard/companies/${application.company.slug}`}
                     className="text-base sm:text-xl text-primary hover:opacity-80 hover:underline transition-opacity break-words"
                   >
@@ -179,7 +179,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   <p className="text-base sm:text-xl text-muted-foreground break-words">{application.company_name}</p>
                 )}
               </div>
-              
+
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                 {application.location && (
                   <div className="flex items-center gap-1">
@@ -250,7 +250,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                 </span>
               )}
             </div>
-            
+
             {application.status === 'interviewing' && application.interview_prep_enabled && (
               <Link href={`/dashboard/applications/${application.id}/interview-prep`} className="block mt-3 sm:mt-4">
                 <Button
@@ -339,13 +339,13 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   <h2 className="text-base sm:text-lg font-semibold text-foreground">Company Information</h2>
                   <ExternalLink className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-muted-foreground ml-auto flex-shrink-0" />
                 </div>
-                
+
                 {application.company.description && (
                   <p className="text-muted-foreground mb-3 sm:mb-4 line-clamp-3 text-sm sm:text-base">
                     {application.company.description}
                   </p>
                 )}
-                
+
                 <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm">
                   {application.company.industry && (
                     <span className="px-2 sm:px-3 py-1 bg-muted text-foreground rounded-full">
@@ -434,8 +434,8 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                 <Edit className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-2" />
                 Edit Details
               </Button>
-              
-              {application.interview_prep_enabled && (
+
+              {application.status === 'interviewing' && application.interview_prep_enabled && (
                 <Link href={`/dashboard/applications/${application.id}/interview-prep`} className="block">
                   <Button variant="outline" className="w-full justify-start rounded-lg sm:rounded-xl text-sm">
                     <FileText className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-2" />
@@ -443,7 +443,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   </Button>
                 </Link>
               )}
-              
+
               {application.company && (
                 <Link href={`/dashboard/companies/${application.company.slug}`} className="block">
                   <Button variant="outline" className="w-full justify-start rounded-lg sm:rounded-xl text-sm">
@@ -452,7 +452,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
                   </Button>
                 </Link>
               )}
-              
+
               {application.job_url && (
                 <a href={application.job_url} target="_blank" rel="noopener noreferrer" className="block">
                   <Button variant="outline" className="w-full justify-start rounded-lg sm:rounded-xl text-sm">

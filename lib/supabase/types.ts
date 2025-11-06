@@ -22,6 +22,31 @@ export type InterviewPrep = {
   generated_at: string
 }
 
+export type QuestionCategory = 'behavioral' | 'technical' | 'company-specific' | 'role-specific'
+
+export type QuestionFeedback = {
+  question_id: string
+  question: string
+  user_answer: string
+  strengths: string[]
+  improvements: string[]
+  ideal_approach: string
+  score: number
+}
+
+export type AIFeedback = {
+  overall_score: number
+  question_feedback: QuestionFeedback[]
+  general_advice: string[]
+  encouragement: string
+}
+
+export type UserAnswer = {
+  questionId: string
+  answer: string
+  timeSpent: number
+}
+
 export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"

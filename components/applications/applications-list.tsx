@@ -41,6 +41,7 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
   const [isDeleting, setIsDeleting] = useState(false)
   const [deletionsRemaining, setDeletionsRemaining] = useState(0)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [blockReason, setBlockReason] = useState<'too_new' | 'limit_reached' | null>(null)
   const [dismissedBanner, setDismissedBanner] = useState(false)
 
@@ -107,8 +108,8 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
     }
   }
 
-  // Handle delete
-  const handleDelete = async () => {
+  // Handle delete button click
+  const handleDeleteClick = () => {
     // Check for too new apps on free tier
     if (userPlan === 'free' && tooNewApps.length > 0) {
       setBlockReason('too_new')
@@ -123,6 +124,13 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
       return
     }
 
+    // Show confirmation dialog
+    setShowDeleteDialog(true)
+  }
+
+  // Confirm delete
+  const confirmDelete = async () => {
+    setShowDeleteDialog(false)
     setIsDeleting(true)
 
     try {
@@ -170,6 +178,41 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
 
   return (
     <div className="space-y-6">
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl shadow-2xl border border-border max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground">
+                Delete Applications
+              </h2>
+            </div>
+
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete <span className="font-semibold text-foreground">{selectedIds.length}</span> application{selectedIds.length !== 1 ? 's' : ''}? This action cannot be undone.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteDialog(false)}
+                className="flex-1 px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Upgrade Modal */}
       {showUpgradeModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -311,7 +354,7 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
           {/* Delete Button */}
           {selectedIds.length > 0 && (
             <button
-              onClick={handleDelete}
+              onClick={handleDeleteClick}
               disabled={!canDeleteAll || isDeleting}
               className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title={
