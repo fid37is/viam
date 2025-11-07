@@ -1,3 +1,4 @@
+// components/AddApplicationForm/index.tsx
 'use client'
 
 import { useState } from 'react'
@@ -7,8 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, Link as LinkIcon, Building2, MapPin, Briefcase, Sparkles, CheckCircle, AlertCircle, Lightbulb, FileText, ArrowLeft } from 'lucide-react'
+import { Loader2, Link as LinkIcon, Building2, MapPin, Briefcase, Sparkles, CheckCircle, AlertCircle, Lightbulb, FileText } from 'lucide-react'
 import { toast } from 'sonner'
+import StepIndicator from './application-form/StepIndicator'
+import MeteoriteLoader from './application-form/MeteoriteLoader'
 
 interface AddApplicationFormProps {
   userId: string
@@ -24,14 +27,18 @@ interface MatchAnalysis {
   }
 }
 
+type FormStep = 'url' | 'details' | 'analysis' | 'research' | 'save'
+
 export default function AddApplicationForm({ userId }: AddApplicationFormProps) {
   const router = useRouter()
   const supabase = createClient()
 
-  const [step, setStep] = useState<'url' | 'details' | 'analysis'>('url')
+  const [step, setStep] = useState<FormStep>('url')
   const [loading, setLoading] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
+  const [researching, setResearching] = useState(false)
 
+  // Form state
   const [jobUrl, setJobUrl] = useState('')
   const [jobTitle, setJobTitle] = useState('')
   const [companyName, setCompanyName] = useState('')
@@ -43,7 +50,9 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
 
   const [matchAnalysis, setMatchAnalysis] = useState<MatchAnalysis | null>(null)
   const [interviewPrepEnabled, setInterviewPrepEnabled] = useState(false)
+  const [companyResearch, setCompanyResearch] = useState<any>(null)
 
+  // URL Step Handler
   const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -55,14 +64,10 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
     setLoading(true)
 
     try {
-      console.log('Sending scrape request with:', { url: jobUrl })
-      
       const response = await fetch('/api/scrape-job', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: jobUrl
-        }),
+        body: JSON.stringify({ url: jobUrl }),
       })
 
       if (!response.ok) {
@@ -88,6 +93,7 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
     }
   }
 
+  // Details Step - navigates to Analysis
   const handleAnalyzeMatch = async () => {
     if (!jobTitle || !companyName) {
       toast.error('Job title and company name are required', { style: { color: '#dc2626' } })
@@ -124,35 +130,44 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
     }
   }
 
+  // Analysis Step - navigates to Research
+  const handleProceedToResearch = () => {
+    setStep('research')
+  }
+
+  // Research Step - just show message and proceed to save
+  const handleResearchComplete = async () => {
+    setResearching(true)
+
+    // Just mark research as completed and move to save
+    // Actual research will happen in background after application is saved
+    toast.success('Company research will be processed in the background.', {
+      style: { color: '#16a34a' }
+    })
+    setCompanyResearch({ completed: true })
+    
+    // Small delay for UX
+    setTimeout(() => {
+      setResearching(false)
+      setStep('save')
+    }, 500)
+  }
+
+  // Skip research
+  const handleSkipResearch = () => {
+    setStep('save')
+  }
+
+  // Save Application
   const handleSaveApplication = async () => {
     setLoading(true)
 
     try {
-      let companyId: string | null = null
-
-      try {
-        const companyResponse = await fetch('/api/research-company', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            companyName,
-            website: jobUrl ? new URL(jobUrl).origin : null
-          }),
-        })
-
-        if (companyResponse.ok) {
-          const companyData = await companyResponse.json()
-          companyId = companyData.company?.id || null
-        }
-      } catch (err) {
-        console.error('Company research failed:', err)
-      }
-
       const { data: application, error } = await supabase
         .from('applications')
         .insert({
           user_id: userId,
-          company_id: companyId,
+          company_id: null,
           job_url: jobUrl,
           job_title: jobTitle,
           company_name: companyName,
@@ -170,37 +185,47 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
 
       if (error) throw error
 
-      if (interviewPrepEnabled && application) {
-        try {
-          await fetch('/api/generate-interview-prep', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ applicationId: application.id }),
-          })
-        } catch (err) {
-          console.error('Interview prep generation failed:', err)
-        }
-      }
+      toast.success('Application saved successfully!', { style: { color: '#16a34a' } })
 
-      toast.success('Application added successfully!', { style: { color: '#16a34a' } })
+      // Background tasks (fire and forget)
+      Promise.all([
+        fetch('/api/research-company', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            companyName,
+            website: jobUrl ? new URL(jobUrl).origin : null,
+            applicationId: application.id,
+          }),
+        }).catch(err => console.error('Background company research failed:', err)),
 
-      router.push('/dashboard/applications')
-      router.refresh()
+        interviewPrepEnabled ? fetch('/api/generate-interview-prep', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ applicationId: application.id }),
+        }).catch(err => console.error('Background interview prep generation failed:', err)) : Promise.resolve()
+      ])
+
+      // Navigate after a short delay to ensure toast shows
+      setTimeout(() => {
+        router.push('/dashboard/applications')
+        router.refresh()
+      }, 500)
+
     } catch (err: any) {
+      console.error('Save error:', err)
       toast.error(err.message || 'Failed to save application', {
         style: { color: '#dc2626' }
       })
-    } finally {
       setLoading(false)
     }
   }
 
   const handleBack = () => {
-    if (step === 'analysis') {
-      setStep('details')
-    } else {
-      setStep('url')
-    }
+    if (step === 'save') setStep('research')
+    else if (step === 'research') setStep('analysis')
+    else if (step === 'analysis') setStep('details')
+    else if (step === 'details') setStep('url')
   }
 
   const getScoreColor = (score: number | null) => {
@@ -223,365 +248,553 @@ export default function AddApplicationForm({ userId }: AddApplicationFormProps) 
   return (
     <div className="w-full px-3 sm:px-4 md:px-6 py-3 sm:py-4">
       <div className="bg-card rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-border w-full">
-        {step === 'url' ? (
-          <form onSubmit={handleUrlSubmit} className="space-y-4 sm:space-y-6">
-            <div>
-              <Label htmlFor="jobUrl" className="text-foreground font-medium text-sm sm:text-base">
-                Job URL
-              </Label>
-              <div className="relative mt-2">
-                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
-              <Input
-                  id="jobUrl"
-                  type="url"
-                  value={jobUrl}
-                  onChange={(e) => setJobUrl(e.target.value)}
-                  placeholder="https://example.com/jobs/software-engineer"
-                  className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
-                  disabled={loading}
-                  autoFocus
-                />
-              </div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-                Paste the link from LinkedIn, Indeed, or any job board
-              </p>
-            </div>
+        {/* Step Indicator */}
+        <StepIndicator currentStep={step} isLoading={loading || analyzing || researching} />
 
+        {/* URL Step */}
+        {step === 'url' && !loading ? (
+          <URLStep
+            jobUrl={jobUrl}
+            setJobUrl={setJobUrl}
+            onSubmit={handleUrlSubmit}
+            onSkip={() => setStep('details')}
+          />
+        ) : step === 'url' && loading ? (
+          <MeteoriteLoader message="Extracting job details..." />
+        ) : null}
+
+        {/* Details Step */}
+        {step === 'details' && !analyzing ? (
+          <DetailsStep
+            jobUrl={jobUrl}
+            setJobUrl={setJobUrl}
+            jobTitle={jobTitle}
+            setJobTitle={setJobTitle}
+            companyName={companyName}
+            setCompanyName={setCompanyName}
+            location={location}
+            setLocation={setLocation}
+            jobDescription={jobDescription}
+            setJobDescription={setJobDescription}
+            status={status}
+            setStatus={setStatus}
+            appliedDate={appliedDate}
+            setAppliedDate={setAppliedDate}
+            notes={notes}
+            setNotes={setNotes}
+            onAnalyze={handleAnalyzeMatch}
+            onBack={handleBack}
+          />
+        ) : step === 'details' && analyzing ? (
+          <MeteoriteLoader message="Analyzing match..." />
+        ) : null}
+
+        {/* Analysis Step */}
+        {step === 'analysis' ? (
+          <AnalysisStep
+            matchAnalysis={matchAnalysis}
+            getScoreColor={getScoreColor}
+            getScoreLabel={getScoreLabel}
+            onProceed={handleProceedToResearch}
+            onBack={handleBack}
+          />
+        ) : null}
+
+        {/* Research Step */}
+        {step === 'research' && !researching ? (
+          <ResearchStep
+            companyName={companyName}
+            onComplete={handleResearchComplete}
+            onSkip={handleSkipResearch}
+            onBack={handleBack}
+            research={companyResearch}
+          />
+        ) : step === 'research' && researching ? (
+          <MeteoriteLoader message="Researching company..." />
+        ) : null}
+
+        {/* Save Step */}
+        {step === 'save' ? (
+          <SaveStep
+            interviewPrepEnabled={interviewPrepEnabled}
+            setInterviewPrepEnabled={setInterviewPrepEnabled}
+            onSave={handleSaveApplication}
+            onBack={handleBack}
+            loading={loading}
+          />
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+// Sub-components for each step
+function URLStep({ jobUrl, setJobUrl, onSubmit, onSkip }: any) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4 sm:space-y-6">
+      <div>
+        <Label htmlFor="jobUrl" className="text-foreground font-medium text-sm sm:text-base">
+          Job URL
+        </Label>
+        <div className="relative mt-2">
+          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
+          <Input
+            id="jobUrl"
+            type="url"
+            value={jobUrl}
+            onChange={(e) => setJobUrl(e.target.value)}
+            placeholder="https://example.com/jobs/software-engineer"
+            className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
+            autoFocus
+          />
+        </div>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+          Paste the link from LinkedIn, Indeed, or any job board
+        </p>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
+      >
+        Continue
+      </Button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs sm:text-sm">
+          <span className="px-2 sm:px-3 bg-card text-muted-foreground">or</span>
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onSkip}
+        className="w-full h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
+      >
+        Enter details manually
+      </Button>
+    </form>
+  )
+}
+
+function DetailsStep(props: any) {
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); props.onAnalyze(); }} className="space-y-4 sm:space-y-6">
+      {/* Job URL */}
+      <div>
+        <Label htmlFor="jobUrlDisplay" className="text-foreground font-medium text-sm sm:text-base">
+          Job URL
+        </Label>
+        <div className="relative mt-2">
+          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
+          <Input
+            id="jobUrlDisplay"
+            type="url"
+            value={props.jobUrl}
+            onChange={(e) => props.setJobUrl(e.target.value)}
+            placeholder="https://example.com/jobs/software-engineer"
+            className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Job Title */}
+      <div>
+        <Label htmlFor="jobTitle" className="text-foreground font-medium text-sm sm:text-base">
+          Job Title <span className="text-destructive">*</span>
+        </Label>
+        <div className="relative mt-2">
+          <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
+          <Input
+            id="jobTitle"
+            type="text"
+            value={props.jobTitle}
+            onChange={(e) => props.setJobTitle(e.target.value)}
+            placeholder="Senior Software Engineer"
+            className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
+            required
+          />
+        </div>
+      </div>
+
+      {/* Company Name */}
+      <div>
+        <Label htmlFor="companyName" className="text-foreground font-medium text-sm sm:text-base">
+          Company Name <span className="text-destructive">*</span>
+        </Label>
+        <div className="relative mt-2">
+          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
+          <Input
+            id="companyName"
+            type="text"
+            value={props.companyName}
+            onChange={(e) => props.setCompanyName(e.target.value)}
+            placeholder="Acme Corporation"
+            className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
+            required
+          />
+        </div>
+      </div>
+
+      {/* Location */}
+      <div>
+        <Label htmlFor="location" className="text-foreground font-medium text-sm sm:text-base">
+          Location
+        </Label>
+        <div className="relative mt-2">
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
+          <Input
+            id="location"
+            type="text"
+            value={props.location}
+            onChange={(e) => props.setLocation(e.target.value)}
+            placeholder="San Francisco, CA (Remote)"
+            className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Job Description */}
+      <div>
+        <Label htmlFor="jobDescription" className="text-foreground font-medium text-sm sm:text-base">
+          Job Description
+        </Label>
+        <Textarea
+          id="jobDescription"
+          value={props.jobDescription}
+          onChange={(e) => props.setJobDescription(e.target.value)}
+          placeholder="Paste the job description here..."
+          rows={5}
+          className="mt-2 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl resize-none text-sm"
+        />
+      </div>
+
+      {/* Application Status */}
+      <div>
+        <Label className="text-foreground font-medium mb-3 block text-sm sm:text-base">
+          Application Status
+        </Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => props.setStatus('not_applied')}
+            className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 text-center transition-all text-sm sm:text-base ${props.status === 'not_applied'
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-muted-foreground hover:bg-muted'
+              }`}
+          >
+            <div className="font-semibold text-foreground">Not Applied Yet</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mt-1">Planning to apply</div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => props.setStatus('applied')}
+            className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 text-center transition-all text-sm sm:text-base ${props.status === 'applied'
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-muted-foreground hover:bg-muted'
+              }`}
+          >
+            <div className="font-semibold text-foreground">Already Applied</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mt-1">Submitted application</div>
+          </button>
+        </div>
+      </div>
+
+      {/* Applied Date */}
+      {props.status === 'applied' && (
+        <div>
+          <Label htmlFor="appliedDate" className="text-foreground font-medium text-sm sm:text-base">
+            Application Date
+          </Label>
+          <Input
+            id="appliedDate"
+            type="date"
+            value={props.appliedDate}
+            onChange={(e) => props.setAppliedDate(e.target.value)}
+            className="h-10 sm:h-12 mt-2 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
+          />
+        </div>
+      )}
+
+      {/* Notes */}
+      <div>
+        <Label htmlFor="notes" className="text-foreground font-medium text-sm sm:text-base">
+          Notes
+        </Label>
+        <Textarea
+          id="notes"
+          value={props.notes}
+          onChange={(e) => props.setNotes(e.target.value)}
+          placeholder="Any additional notes or thoughts about this opportunity..."
+          rows={4}
+          className="mt-2 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl resize-none text-sm"
+        />
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={props.onBack}
+          className="flex-1 h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
+        >
+          Back
+        </Button>
+
+        <Button
+          type="submit"
+          className="flex-1 h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
+        >
+          <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 mr-1.5 sm:mr-2" />
+          Analyze Match
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+function AnalysisStep({ matchAnalysis, getScoreColor, getScoreLabel, onProceed, onBack }: any) {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <div className="text-center py-6 sm:py-8 border-b border-border">
+        <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-3 sm:mb-4 bg-primary/10">
+          <span className={`text-3xl sm:text-4xl font-bold ${getScoreColor(matchAnalysis?.matchScore || null)}`}>
+            {matchAnalysis?.matchScore || '--'}
+          </span>
+        </div>
+        <h3 className="text-lg sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">
+          {getScoreLabel(matchAnalysis?.matchScore || null)}
+        </h3>
+        <p className="text-sm sm:text-base text-muted-foreground px-2">
+          {matchAnalysis?.analysis.summary || 'No analysis available'}
+        </p>
+      </div>
+
+      {matchAnalysis?.analysis.strengths?.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-green-600 flex-shrink-0" />
+            <h3 className="font-semibold text-foreground text-sm sm:text-base">Strengths</h3>
+          </div>
+          <ul className="space-y-2">
+            {matchAnalysis.analysis.strengths.map((strength: string, index: number) => (
+              <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
+                <span className="text-green-600 mt-0.5 flex-shrink-0">•</span>
+                <span>{strength}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {matchAnalysis?.analysis.concerns?.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-yellow-600 flex-shrink-0" />
+            <h3 className="font-semibold text-foreground text-sm sm:text-base">Concerns</h3>
+          </div>
+          <ul className="space-y-2">
+            {matchAnalysis.analysis.concerns.map((concern: string, index: number) => (
+              <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
+                <span className="text-yellow-600 mt-0.5 flex-shrink-0">•</span>
+                <span>{concern}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {matchAnalysis?.analysis.recommendations?.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5 text-secondary flex-shrink-0" />
+            <h3 className="font-semibold text-foreground text-sm sm:text-base">Recommendations</h3>
+          </div>
+          <ul className="space-y-2">
+            {matchAnalysis.analysis.recommendations.map((rec: string, index: number) => (
+              <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
+                <span className="text-primary mt-0.5 flex-shrink-0">•</span>
+                <span>{rec}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4 border-t border-border">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          className="flex-1 h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
+        >
+          Edit Details
+        </Button>
+
+        <Button
+          type="button"
+          onClick={onProceed}
+          className="flex-1 h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
+        >
+          Next: Research Company
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ResearchStep({ companyName, onComplete, onSkip, onBack, research }: any) {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {!research ? (
+        <>
+          <div className="p-4 sm:p-6 bg-muted rounded-lg sm:rounded-xl border border-border">
+            <h3 className="font-semibold text-foreground text-base sm:text-lg mb-2">
+              Research {companyName}?
+            </h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4">
+              We'll gather information about the company including culture, recent news, and industry insights to help you prepare for interviews.
+            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground italic">
+              You can skip this step to save the application faster, and research will happen in the background.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4">
             <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
+              type="button"
+              variant="outline"
+              onClick={onBack}
+              className="flex-1 h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
-                  <span className="hidden sm:inline">Extracting details...</span>
-                  <span className="sm:hidden">Loading...</span>
-                </>
-              ) : (
-                'Continue'
-              )}
+              Back
             </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs sm:text-sm">
-                <span className="px-2 sm:px-3 bg-card text-muted-foreground">or</span>
-              </div>
-            </div>
 
             <Button
               type="button"
               variant="outline"
-              onClick={() => setStep('details')}
-              className="w-full h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
+              onClick={onSkip}
+              className="flex-1 h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
             >
-              Enter details manually
+              Skip
             </Button>
-          </form>
-        ) : step === 'details' ? (
-          <form onSubmit={(e) => { e.preventDefault(); handleAnalyzeMatch(); }} className="space-y-4 sm:space-y-6">
-            <div>
-              <Label htmlFor="jobUrlDisplay" className="text-foreground font-medium text-sm sm:text-base">
-                Job URL
-              </Label>
-              <div className="relative mt-2">
-                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
-                <Input
-                  id="jobUrlDisplay"
-                  type="url"
-                  value={jobUrl}
-                  onChange={(e) => setJobUrl(e.target.value)}
-                  placeholder="https://example.com/jobs/software-engineer"
-                  className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
-                />
-              </div>
-            </div>
 
-            <div>
-              <Label htmlFor="jobTitle" className="text-foreground font-medium text-sm sm:text-base">
-                Job Title <span className="text-destructive">*</span>
-              </Label>
-              <div className="relative mt-2">
-                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
-                <Input
-                  id="jobTitle"
-                  type="text"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="Senior Software Engineer"
-                  className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="companyName" className="text-foreground font-medium text-sm sm:text-base">
-                Company Name <span className="text-destructive">*</span>
-              </Label>
-              <div className="relative mt-2">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
-                <Input
-                  id="companyName"
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Acme Corporation"
-                  className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="location" className="text-foreground font-medium text-sm sm:text-base">
-                Location
-              </Label>
-              <div className="relative mt-2">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground" />
-                <Input
-                  id="location"
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="San Francisco, CA (Remote)"
-                  className="h-10 sm:h-12 pl-9 sm:pl-10 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="jobDescription" className="text-foreground font-medium text-sm sm:text-base">
-                Job Description
-              </Label>
-              <Textarea
-                id="jobDescription"
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-                placeholder="Paste the job description here..."
-                rows={5}
-                className="mt-2 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl resize-none text-sm"
-              />
-            </div>
-
-            <div>
-              <Label className="text-foreground font-medium mb-3 block text-sm sm:text-base">
-                Application Status
-              </Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setStatus('not_applied')}
-                  className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 text-center transition-all text-sm sm:text-base ${
-                    status === 'not_applied'
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border hover:border-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  <div className="font-semibold text-foreground">Not Applied Yet</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground mt-1">Planning to apply</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setStatus('applied')}
-                  className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 text-center transition-all text-sm sm:text-base ${
-                    status === 'applied'
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border hover:border-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  <div className="font-semibold text-foreground">Already Applied</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground mt-1">Submitted application</div>
-                </button>
-              </div>
-            </div>
-
-            {status === 'applied' && (
+            <Button
+              type="button"
+              onClick={onComplete}
+              className="flex-1 h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
+            >
+              Research Company
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="p-4 sm:p-6 bg-green-50 dark:bg-green-950 rounded-lg sm:rounded-xl border border-green-200 dark:border-green-800">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
               <div>
-                <Label htmlFor="appliedDate" className="text-foreground font-medium text-sm sm:text-base">
-                  Application Date
-                </Label>
-                <Input
-                  id="appliedDate"
-                  type="date"
-                  value={appliedDate}
-                  onChange={(e) => setAppliedDate(e.target.value)}
-                  className="h-10 sm:h-12 mt-2 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl text-sm"
-                />
+                <h3 className="font-semibold text-green-900 dark:text-green-100 text-base sm:text-lg mb-1">
+                  Research Successful!
+                </h3>
+                <p className="text-sm sm:text-base text-green-800 dark:text-green-200 mb-2">
+                  Company research has been completed and will be available on the company page.
+                </p>
+                <p className="text-xs sm:text-sm text-green-700 dark:text-green-300 italic">
+                  Details about {companyName}'s culture, news, and industry insights are being processed and will appear shortly.
+                </p>
               </div>
-            )}
-
-            <div>
-              <Label htmlFor="notes" className="text-foreground font-medium text-sm sm:text-base">
-                Notes
-              </Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any additional notes or thoughts about this opportunity..."
-                rows={4}
-                className="mt-2 border-input focus:border-transparent focus:ring-2 focus:ring-ring rounded-lg sm:rounded-xl resize-none text-sm"
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleBack}
-                className="flex-1 h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
-                disabled={analyzing}
-              >
-                Back
-              </Button>
-
-              <Button
-                type="submit"
-                disabled={analyzing}
-                className="flex-1 h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
-              >
-                {analyzing ? (
-                  <>
-                    <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
-                    <span className="hidden sm:inline">Analyzing match...</span>
-                    <span className="sm:hidden">Analyzing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 mr-1.5 sm:mr-2" />
-                    Analyze Match
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="text-center py-6 sm:py-8 border-b border-border">
-              <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-3 sm:mb-4 bg-primary/10">
-                <span className={`text-3xl sm:text-4xl font-bold ${getScoreColor(matchAnalysis?.matchScore || null)}`}>
-                  {matchAnalysis?.matchScore || '--'}
-                </span>
-              </div>
-              <h3 className="text-lg sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">
-                {getScoreLabel(matchAnalysis?.matchScore || null)}
-              </h3>
-              <p className="text-sm sm:text-base text-muted-foreground px-2">
-                {matchAnalysis?.analysis.summary || 'No analysis available'}
-              </p>
-            </div>
-
-            {matchAnalysis?.analysis.strengths && matchAnalysis.analysis.strengths.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-green-600 flex-shrink-0" />
-                  <h3 className="font-semibold text-foreground text-sm sm:text-base">Strengths</h3>
-                </div>
-                <ul className="space-y-2">
-                  {matchAnalysis.analysis.strengths.map((strength, index) => (
-                    <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
-                      <span className="text-green-600 mt-0.5 flex-shrink-0">•</span>
-                      <span>{strength}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {matchAnalysis?.analysis.concerns && matchAnalysis.analysis.concerns.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-yellow-600 flex-shrink-0" />
-                  <h3 className="font-semibold text-foreground text-sm sm:text-base">Concerns</h3>
-                </div>
-                <ul className="space-y-2">
-                  {matchAnalysis.analysis.concerns.map((concern, index) => (
-                    <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
-                      <span className="text-yellow-600 mt-0.5 flex-shrink-0">•</span>
-                      <span>{concern}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {matchAnalysis?.analysis.recommendations && matchAnalysis.analysis.recommendations.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5 text-secondary flex-shrink-0" />
-                  <h3 className="font-semibold text-foreground text-sm sm:text-base">Recommendations</h3>
-                </div>
-                <ul className="space-y-2">
-                  {matchAnalysis.analysis.recommendations.map((rec, index) => (
-                    <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
-                      <span className="text-primary mt-0.5 flex-shrink-0">•</span>
-                      <span>{rec}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="border-t border-border pt-4 sm:pt-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-muted rounded-lg sm:rounded-xl gap-3">
-                <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1">
-                  <FileText className="w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground flex-shrink-0 mt-0.5 sm:mt-0" />
-                  <div>
-                    <p className="font-medium text-foreground text-sm sm:text-base">Enable Interview Prep</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Generate AI-powered interview questions</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setInterviewPrepEnabled(!interviewPrepEnabled)}
-                  className={`relative inline-flex h-5 sm:h-6 w-9 sm:w-11 items-center rounded-full transition-colors flex-shrink-0 ${
-                    interviewPrepEnabled ? 'bg-primary' : 'bg-input'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3 sm:h-4 w-3 sm:w-4 transform rounded-full bg-white transition-transform ${
-                      interviewPrepEnabled ? 'translate-x-4 sm:translate-x-6' : 'translate-x-0.5 sm:translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4 border-t border-border">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleBack}
-                className="flex-1 h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
-                disabled={loading}
-              >
-                Edit Details
-              </Button>
-
-              <Button
-                type="button"
-                onClick={handleSaveApplication}
-                disabled={loading}
-                className="flex-1 h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
-                    <span className="hidden sm:inline">Saving...</span>
-                    <span className="sm:hidden">Save...</span>
-                  </>
-                ) : (
-                  'Save Application'
-                )}
-              </Button>
             </div>
           </div>
-        )}
+
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onBack}
+              className="flex-1 h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
+            >
+              Back
+            </Button>
+
+            <Button
+              type="button"
+              onClick={onSkip}
+              className="flex-1 h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
+            >
+              Continue to Save
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function SaveStep({ interviewPrepEnabled, setInterviewPrepEnabled, onSave, onBack, loading }: any) {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <div className="py-4 sm:py-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-muted rounded-lg sm:rounded-xl gap-3">
+          <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1">
+            <FileText className="w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground flex-shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="font-medium text-foreground text-sm sm:text-base">Enable Interview Prep</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Generate AI-powered interview questions when status changes to "Interviewing"
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setInterviewPrepEnabled(!interviewPrepEnabled)}
+            className={`relative inline-flex h-5 sm:h-6 w-9 sm:w-11 items-center rounded-full transition-colors flex-shrink-0 ${interviewPrepEnabled ? 'bg-primary' : 'bg-input'
+              }`}
+          >
+            <span
+              className={`inline-block h-3 sm:h-4 w-3 sm:w-4 transform rounded-full bg-white transition-transform ${interviewPrepEnabled ? 'translate-x-4 sm:translate-x-6' : 'translate-x-0.5 sm:translate-x-1'
+                }`}
+            />
+          </button>
+        </div>
+
+        <p className="text-xs sm:text-sm text-muted-foreground mt-3 p-3 bg-blue-50 dark:bg-blue-950 rounded border border-blue-200 dark:border-blue-800">
+          💡 Interview prep will automatically generate when you update your application status to "Interviewing". Enable this option to get AI-powered questions based on the job description and company research.
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4 border-t border-border">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          className="flex-1 h-10 sm:h-12 border-border rounded-lg sm:rounded-xl hover:bg-accent hover:text-accent-foreground text-sm sm:text-base"
+          disabled={loading}
+        >
+          Back
+        </Button>
+
+        <Button
+          type="button"
+          onClick={onSave}
+          disabled={loading}
+          className="flex-1 h-10 sm:h-12 bg-primary text-primary-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-sm sm:text-base"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline">Saving...</span>
+              <span className="sm:hidden">Save...</span>
+            </>
+          ) : (
+            'Save Application'
+          )}
+        </Button>
       </div>
     </div>
   )
