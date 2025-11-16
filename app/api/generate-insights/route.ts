@@ -15,28 +15,20 @@ function cleanAIText(text: string): string {
     .replace(/#{1,6}\s/g, '') // Remove markdown headers
     .replace(/`{1,3}/g, '') // Remove code backticks
     
-    // Convert section headers to proper format with hierarchy
-    .replace(/^(\d+\.\s+)([A-Z][^:\n]+)(:)?/gm, '\n\n━━━ $2 ━━━\n') // Main sections
-    
-    // Fix spacing issues
-    .replace(/\n{4,}/g, '\n\n\n') // Max 3 consecutive newlines for section breaks
-    .replace(/^\s+|\s+$/gm, '') // Trim whitespace from each line
-    
-    // Clean up bullet points - keep simple format
-    .replace(/^[•◦▪▫]\s*/gm, '  • ') // Normalize bullet points with indent
-    .replace(/^[-–—]\s*/gm, '  • ') // Convert dashes to bullets with indent
-    
-    // Add spacing after bullet points for better readability
-    .replace(/(  • [^\n]+)\n(?=  •)/g, '$1\n\n') // Space between bullets
-    
     // Remove excessive exclamation marks
     .replace(/!{2,}/g, '!') // Max one exclamation mark
     
-    // Clean up numbered lists
-    .replace(/^\d+\.\s+\*\*/gm, (match) => match.replace('**', ''))
+    // CRITICAL: Ensure section titles are on separate lines
+    .replace(/([.!?])([A-Z][a-z]+\s+[A-Z][a-z]+:)/g, '$1\n\n$2\n\n')
+    .replace(/([.!?])([A-Z][a-z]+:)/g, '$1\n\n$2\n\n')
     
-    // Add extra spacing before section dividers
-    .replace(/\n(━━━)/g, '\n\n$1')
+    // Ensure bullet points are each on their own line
+    .replace(/([^\n])(•|[•◦▪▫])/g, '$1\n$2') // Add newline before bullet if missing
+    .replace(/^[•◦▪▫–—]\s*/gm, '• ') // Normalize all bullet types to •
+    
+    // Clean up spacing
+    .replace(/\n{4,}/g, '\n\n') // Max 2 consecutive newlines
+    .replace(/^\s+|\s+$/gm, '') // Trim whitespace from each line
     
     .trim()
 }
@@ -88,36 +80,67 @@ JOB SEARCH STATISTICS:
 ${topLocations.length > 0 ? `- Top Target Locations: ${topLocations.map((l: any) => `${l.location} (${l.count})`).join(', ')}` : ''}
 
 TASK:
-Provide a comprehensive career coaching analysis with:
+Provide a comprehensive career coaching analysis with the following sections. CRITICAL: Each section title MUST be on its own line, followed by bullet points (where applicable), with each bullet point on a new line.
 
-1. Overall Assessment (2-3 sentences)
-   - Evaluate their job search performance and momentum
-   - Highlight what they're doing well
+Overall Assessment:
 
-2. Key Insights (3-4 bullet points)
-   - Identify patterns, strengths, and areas of concern
-   - Compare their metrics to industry benchmarks
-   - Point out any red flags or opportunities
+[Write 2-3 sentences here]
 
-3. Actionable Recommendations (5-7 specific action items)
-   - Prioritize by impact (most important first)
-   - Make each recommendation specific and actionable
-   - Include both quick wins and strategic improvements
-   - Address application volume, quality, follow-ups, interview prep, etc.
+Key Insights:
 
-4. Motivational Closing (1-2 sentences)
-   - Encourage and energize them for their job search
+• [First insight]
+• [Second insight]
+• [Third insight]
 
-FORMAT INSTRUCTIONS:
+Actionable Recommendations:
+
+• [First recommendation]
+• [Second recommendation]
+• [Third recommendation]
+• [Fourth recommendation]
+• [Fifth recommendation]
+
+Motivational Closing:
+
+[Write 1-2 sentences here]
+
+CONTENT GUIDELINES:
+1. Overall Assessment: Evaluate their job search performance and momentum, highlight what they're doing well
+2. Key Insights: Identify 3-4 patterns, strengths, areas of concern. Compare to industry benchmarks
+3. Actionable Recommendations: Provide 5-7 specific action items, prioritized by impact
+4. Motivational Closing: Encourage and energize them
+
+FORMAT RULES (CRITICAL):
 - Write in plain text without markdown formatting
 - Do NOT use asterisks, stars, or special characters for emphasis
-- Use simple bullet points with "•" only
-- Keep section headers simple without special formatting
-- Write naturally as if speaking to them directly
-- Be warm, encouraging, but direct
+- Each section title MUST end with a colon and be on its own separate line
+- Each bullet point MUST start on a new line with "•" character
+- Leave a blank line between sections
+- Write naturally and warmly
 - Use specific numbers from their data
 
-IMPORTANT: 
+EXAMPLE FORMAT:
+Overall Assessment:
+
+[Your assessment paragraph here]
+
+Key Insights:
+
+• First insight with specific data
+• Second insight comparing to benchmarks
+• Third insight about patterns
+
+Actionable Recommendations:
+
+• First specific action item
+• Second specific action item
+• Third specific action item
+
+Motivational Closing:
+
+[Your encouragement here]
+
+IMPORTANT CONTEXT:
 - If they have very few applications (< 5), emphasize the need to increase volume
 - If response rate is low (< 10%), focus on application quality and targeting
 - If they have many tracked but not applied, encourage action

@@ -32,6 +32,7 @@ export default function AuthSection() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [emailLoading, setEmailLoading] = useState(false)
   const [intentUpgrade, setIntentUpgrade] = useState(false)
+  const [toastShown, setToastShown] = useState(false)
 
   // Check for subscription intent and errors
   useEffect(() => {
@@ -52,20 +53,71 @@ export default function AuthSection() {
     }
   }, [searchParams])
 
-  // Check if user is authenticated
+  // Check if user is authenticated AND check onboarding status
   useEffect(() => {
-    const checkUser = async () => {
+    const checkUserAndOnboarding = async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      
       if (user && step !== 'reset-password') {
-        if (intentUpgrade) {
-          router.push('/subscription')
+        // Fetch user's profile to check onboarding status
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('onboarding_completed, account_status')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError)
+          // If profile doesn't exist, they need onboarding
+          if (intentUpgrade) {
+            router.push('/onboarding?redirect=/subscription')
+          } else {
+            router.push('/onboarding')
+          }
+          return
+        }
+
+        // Check if account is hibernated or deleted
+        if (profile?.account_status === 'hibernated' || profile?.account_status === 'deleted') {
+          // Let them stay on auth page or redirect to reactivate
+          router.push(`/auth/reactivate?email=${encodeURIComponent(user.email || '')}&status=${profile.account_status}`)
+          return
+        }
+
+        // Check if they've completed onboarding
+        if (!profile?.onboarding_completed) {
+          // User needs to complete onboarding - show success toast if not shown yet
+          if (!toastShown) {
+            // Check auth provider to show appropriate message
+            const provider = user.app_metadata?.provider
+            
+            if (provider === 'google') {
+              toast.success('Signed in with Google successfully!')
+            } else if (user.email_confirmed_at) {
+              // Email was verified (either just now or previously)
+              toast.success('Email verified successfully!')
+            }
+            setToastShown(true)
+          }
+
+          if (intentUpgrade) {
+            router.push('/onboarding?redirect=/subscription')
+          } else {
+            router.push('/onboarding')
+          }
         } else {
-          router.push('/dashboard')
+          // Onboarding completed - redirect to dashboard or subscription
+          if (intentUpgrade) {
+            router.push('/subscription')
+          } else {
+            router.push('/dashboard')
+          }
         }
       }
     }
-    checkUser()
-  }, [intentUpgrade])
+    
+    checkUserAndOnboarding()
+  }, [intentUpgrade, step, toastShown])
 
   const goBack = () => {
     setStep('initial')
@@ -182,7 +234,7 @@ export default function AuthSection() {
             onShowPasswordChange={setShowPassword}
             onSuccess={() => {
               toast.success('Welcome back!')
-              router.push(intentUpgrade ? '/subscription' : '/dashboard')
+              // Let the useEffect handle routing based on onboarding status
               router.refresh()
             }}
             onForgotPassword={() => setStep('forgot-password')}
@@ -238,7 +290,7 @@ export default function AuthSection() {
             onShowConfirmPasswordChange={setShowConfirmPassword}
             onSuccess={() => {
               toast.success('Password reset successfully!')
-              router.push('/dashboard')
+              // Let the useEffect handle routing based on onboarding status
               router.refresh()
             }}
             onLoading={setEmailLoading}

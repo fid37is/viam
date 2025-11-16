@@ -1,7 +1,6 @@
-// app/api/analyze-match/route.ts
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { analyzeJobMatch } from '@/lib/ai/match-analyzer'
+import { analyzeJobMatch, type MatchAnalysisResult } from '@/lib/ai/match-analyzer'
 import { isAIConfigured, getAIProvider, getProviderName } from '@/lib/ai/providers'
 
 export async function POST(request: Request) {
@@ -81,10 +80,22 @@ export async function POST(request: Request) {
             )
         }
 
-        // Fetch user preferences
+        // Fetch user preferences AND professional profile (UPDATED)
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('top_values, deal_breakers, work_location_preference, preferred_company_size, preferred_industries')
+            .select(`
+                top_values, 
+                deal_breakers, 
+                work_location_preference, 
+                preferred_company_size, 
+                preferred_industries,
+                current_job_title,
+                experience_level,
+                skills,
+                career_goals,
+                short_term_goal,
+                long_term_goal
+            `)
             .eq('id', user.id)
             .single()
 
@@ -99,19 +110,36 @@ export async function POST(request: Request) {
             profile.preferred_company_size ||
             (Array.isArray(profile.preferred_industries) && profile.preferred_industries.length > 0)
 
-        if (!hasPreferences) {
+        const hasProfile = 
+            profile.current_job_title ||
+            profile.experience_level ||
+            (Array.isArray(profile.skills) && profile.skills.length > 0)
+
+        if (!hasPreferences && !hasProfile) {
+            const emptyAnalysis: MatchAnalysisResult = {
+                match_score: 0,
+                category_scores: {
+                    values_alignment: 0,
+                    culture_fit: 0,
+                    growth_opportunity: 0,
+                    practical_fit: 0,
+                    qualification_match: 0
+                },
+                strengths: [],
+                concerns: [],
+                recommendations: ['Complete your professional profile and preferences to get personalized match insights'],
+                interview_question: 'What does success look like in this role?',
+                summary: 'Complete your profile (job title, skills, experience) and preferences to receive AI-powered job matching analysis.',
+                qualification_assessment: 'well-qualified'
+            }
+
             return NextResponse.json({
                 matchScore: null,
-                analysis: {
-                    strengths: [],
-                    concerns: [],
-                    recommendations: ['Set your job preferences to get personalized match insights'],
-                    summary: 'Complete your profile preferences to receive AI-powered job matching analysis.'
-                }
+                analysis: emptyAnalysis
             })
         }
 
-     // Perform AI analysis with type-safe casting
+        // Perform AI analysis with comprehensive profile data (UPDATED)
         const analysis = await analyzeJobMatch(
             jobData.job_title,
             jobData.company_name,
@@ -123,6 +151,12 @@ export async function POST(request: Request) {
                 work_location_preference: profile.work_location_preference,
                 preferred_company_size: profile.preferred_company_size,
                 preferred_industries: profile.preferred_industries,
+                current_job_title: profile.current_job_title,
+                experience_level: profile.experience_level,
+                skills: Array.isArray(profile.skills) ? profile.skills as string[] : null,
+                career_goals: profile.career_goals,
+                short_term_goal: profile.short_term_goal,
+                long_term_goal: profile.long_term_goal,
             }
         )
 
@@ -132,7 +166,7 @@ export async function POST(request: Request) {
                 .from('applications')
                 .update({
                     match_score: analysis.match_score,
-                    match_analysis: JSON.parse(JSON.stringify(analysis)),
+                    match_analysis: analysis as any, // Cast to bypass Json type
                 })
                 .eq('id', applicationId)
 

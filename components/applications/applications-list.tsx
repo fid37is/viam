@@ -39,11 +39,17 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [deletionsRemaining, setDeletionsRemaining] = useState(0)
+  const [deletionsRemaining, setDeletionsRemaining] = useState<number | null>(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [blockReason, setBlockReason] = useState<'too_new' | 'limit_reached' | null>(null)
-  const [dismissedBanner, setDismissedBanner] = useState(false)
+  const [dismissedBanner, setDismissedBanner] = useState(() => {
+    // Check if banner was dismissed in this session
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('deletionBannerDismissed') === 'true'
+    }
+    return false
+  })
 
   // Check which apps can be deleted
   const tooNewApps = selectedIds.filter(id => {
@@ -53,11 +59,20 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
     return daysOld < 14
   })
 
-  const canDeleteAll = userPlan === 'premium' || (deletionsRemaining > 0 && tooNewApps.length === 0)
+  const canDeleteAll = userPlan === 'premium' || (deletionsRemaining !== null && deletionsRemaining > 0 && tooNewApps.length === 0)
   const canDelete = selectedIds.length > 0
 
-  // Show banner only when close to limit (3 or fewer remaining) and not dismissed
-  const showWarningBanner = userPlan === 'free' && deletionsRemaining <= 3 && !dismissedBanner
+  // Show banner only when:
+  // 1. User is on free tier
+  // 2. Has 3 or fewer deletions remaining
+  // 3. Hasn't dismissed it in this session
+  // 4. deletionsRemaining has been loaded (not null)
+  const showWarningBanner = 
+    userPlan === 'free' && 
+    deletionsRemaining !== null && 
+    deletionsRemaining <= 3 && 
+    deletionsRemaining >= 0 &&
+    !dismissedBanner
 
   // Filter applications
   const filteredApplications = applications.filter((app) => {
@@ -118,7 +133,7 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
     }
 
     // Check deletion limit on free tier
-    if (userPlan === 'free' && deletionsRemaining <= 0) {
+    if (userPlan === 'free' && (deletionsRemaining === null || deletionsRemaining <= 0)) {
       setBlockReason('limit_reached')
       setShowUpgradeModal(true)
       return
@@ -164,13 +179,27 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
     }
   }
 
+  // Handle banner dismissal
+  const handleDismissBanner = () => {
+    setDismissedBanner(true)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('deletionBannerDismissed', 'true')
+    }
+  }
+
   // Fetch deletion limit on mount
   useEffect(() => {
     if (userPlan === 'free') {
       fetch('/api/applications/delete-limit')
         .then(res => res.json())
-        .then(data => setDeletionsRemaining(data.remaining || 0))
-        .catch(() => setDeletionsRemaining(0))
+        .then(data => {
+          if (data.remaining !== undefined) {
+            setDeletionsRemaining(data.remaining)
+          }
+        })
+        .catch(() => {
+          setDeletionsRemaining(0)
+        })
     }
   }, [userPlan])
 
@@ -255,15 +284,16 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
           <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-              Running low on deletions: <span className="font-bold">{deletionsRemaining} remaining</span>
+              Running low on deletions
             </p>
             <p className="text-xs text-amber-800 dark:text-amber-200 mt-1">
-              You have <span className="font-bold">{deletionsRemaining}</span> deletions left this month. Upgrade to Premium for unlimited.
+              You have <span className="font-bold">{deletionsRemaining}</span> deletion{deletionsRemaining !== 1 ? 's' : ''} left this month. <Link href="/pricing" className="underline hover:no-underline">Upgrade to Premium</Link> for unlimited deletions.
             </p>
           </div>
           <button
-            onClick={() => setDismissedBanner(true)}
+            onClick={handleDismissBanner}
             className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex-shrink-0 mt-0.5"
+            aria-label="Dismiss warning"
           >
             <X className="w-4 h-4" />
           </button>
@@ -360,7 +390,7 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
               title={
                 userPlan === 'free' && tooNewApps.length > 0
                   ? `${tooNewApps.length} app(s) must be older than 14 days`
-                  : userPlan === 'free' && deletionsRemaining <= 0
+                  : userPlan === 'free' && (deletionsRemaining === null || deletionsRemaining <= 0)
                     ? 'Monthly deletion limit reached'
                     : ''
               }
@@ -370,13 +400,13 @@ export default function ApplicationsList({ initialApplications, userPlan }: Appl
               ) : (
                 <Trash2 className="w-4 h-4" />
               )}
-              Delete
+              Delete {selectedIds.length > 0 && `(${selectedIds.length})`}
             </button>
           )}
 
           {/* Applications Count */}
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{sortedApplications.length}</span> Total Applications
+            <span className="font-semibold text-foreground">{sortedApplications.length}</span> Total
           </p>
         </div>
       </div>

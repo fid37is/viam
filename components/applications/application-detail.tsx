@@ -45,9 +45,9 @@ function formatJobDescription(description: string) {
   const flushList = () => {
     if (currentList.length > 0) {
       formattedContent.push(
-        <ul key={formattedContent.length} className="list-disc list-inside space-y-1 sm:space-y-2 my-3 sm:my-4 ml-2 sm:ml-4">
+        <ul key={formattedContent.length} className="list-disc list-inside space-y-1.5 my-3 ml-3">
           {currentList.map((item, idx) => (
-            <li key={idx} className="text-muted-foreground leading-relaxed text-sm sm:text-base">{item}</li>
+            <li key={idx} className="text-muted-foreground leading-relaxed text-sm break-words">{item}</li>
           ))}
         </ul>
       )
@@ -75,7 +75,7 @@ function formatJobDescription(description: string) {
     ) {
       flushList()
       formattedContent.push(
-        <h3 key={index} className="text-base sm:text-lg font-semibold text-foreground mt-4 sm:mt-6 mb-2 sm:mb-3">
+        <h3 key={index} className="text-base font-semibold text-foreground mt-5 mb-2 break-words">
           {trimmed.replace(/:$/, '')}
         </h3>
       )
@@ -83,7 +83,7 @@ function formatJobDescription(description: string) {
     else if (trimmed.length > 0) {
       flushList()
       formattedContent.push(
-        <p key={index} className="text-muted-foreground leading-relaxed mb-2 sm:mb-4 text-sm sm:text-base">
+        <p key={index} className="text-muted-foreground leading-relaxed mb-3 text-sm break-words">
           {trimmed}
         </p>
       )
@@ -146,52 +146,50 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
   const matchAnalysis = application.match_analysis as any
 
   return (
-    <div className="w-full px-3 sm:px-4 md:px-6">
+    <div className="w-full min-w-0 px-4 sm:px-6">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-6">
         <Link href="/dashboard/applications">
-          <Button variant="ghost" className="mb-3 sm:mb-4 -ml-2 sm:-ml-3 text-sm sm:text-base">
-            <ArrowLeft className="w-4 h-4 mr-1.5 sm:mr-2" />
-            <span className="hidden xs:inline">Back</span>
-            <span className="xs:hidden">Back</span>
+          <Button variant="ghost" className="mb-4 -ml-3 text-sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
           </Button>
         </Link>
 
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
-          <div className="flex items-start gap-3 sm:gap-4 flex-1 w-full">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2 break-words">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-foreground mb-1 break-words">
                 {application.job_title}
               </h1>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+              <div className="mb-2">
                 {application.company?.slug ? (
                   <Link
                     href={`/dashboard/companies/${application.company.slug}`}
-                    className="text-base sm:text-xl text-primary hover:opacity-80 hover:underline transition-opacity break-words"
+                    className="text-base sm:text-lg text-primary hover:opacity-80 hover:underline transition-opacity break-words inline-block"
                   >
                     {application.company_name}
                   </Link>
                 ) : (
-                  <p className="text-base sm:text-xl text-muted-foreground break-words">{application.company_name}</p>
+                  <p className="text-base sm:text-lg text-muted-foreground break-words">{application.company_name}</p>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-muted-foreground">
                 {application.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3.5 sm:w-4 h-3.5 sm:h-4 flex-shrink-0" />
-                    <span>{application.location}</span>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">{application.location}</span>
                   </div>
                 )}
                 {application.created_at && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3.5 sm:w-4 h-3.5 sm:h-4 flex-shrink-0" />
-                    <span className="hidden xs:inline">Added {formatDate(application.created_at)}</span>
-                    <span className="xs:hidden">{formatDate(application.created_at)}</span>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>Added {formatDate(application.created_at)}</span>
                   </div>
                 )}
               </div>
@@ -199,7 +197,7 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           </div>
 
           {/* Actions Menu */}
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <button
               onClick={() => setShowMenu(!showMenu)}
               className="p-2 hover:bg-muted rounded-lg transition-colors"
@@ -208,55 +206,67 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-card rounded-lg sm:rounded-xl shadow-lg border border-border py-2 z-10">
-                <button
-                  onClick={() => router.push(`/dashboard/applications/${application.id}/edit`)}
-                  className="w-full px-3 sm:px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-foreground text-sm"
-                >
-                  <Edit className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="w-full px-3 sm:px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-destructive text-sm"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {deleting ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setShowMenu(false)}
+                />
+                <div className="absolute right-0 mt-2 w-44 bg-card rounded-xl shadow-lg border border-border py-2 z-20">
+                  <button
+                    onClick={() => {
+                      setShowMenu(false)
+                      router.push(`/dashboard/applications/${application.id}/edit`)
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-foreground text-sm"
+                  >
+                    <Edit className="w-4 h-4 flex-shrink-0" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false)
+                      handleDelete()
+                    }}
+                    disabled={deleting}
+                    className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-destructive text-sm disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4 flex-shrink-0" />
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid lg:grid-cols-3 gap-5">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+        <div className="lg:col-span-2 space-y-5 min-w-0">
           {/* Status Card */}
-          <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
-            <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Status</h2>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+          <div className="bg-card rounded-xl shadow-sm p-5 border border-border">
+            <h2 className="text-base font-semibold text-foreground mb-3">Status</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
               <span
-                className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${getStatusColor(
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
                   application.status
                 )}`}
               >
                 {getStatusLabel(application.status)}
               </span>
               {application.applied_date && (
-                <span className="text-xs sm:text-sm text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   Applied on {formatDate(application.applied_date)}
                 </span>
               )}
             </div>
 
             {application.status === 'interviewing' && application.interview_prep_enabled && (
-              <Link href={`/dashboard/applications/${application.id}/interview-prep`} className="block mt-3 sm:mt-4">
+              <Link href={`/dashboard/applications/${application.id}/interview-prep`} className="block mt-4">
                 <Button
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg sm:rounded-xl text-sm sm:text-base"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl text-sm"
                 >
-                  <Brain className="w-4 sm:w-5 h-4 sm:h-5 mr-1.5 sm:mr-2" />
+                  <Brain className="w-4 h-4 mr-2" />
                   Start Interview Prep
                 </Button>
               </Link>
@@ -265,28 +275,28 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
 
           {/* Match Analysis */}
           {application.match_score !== null && matchAnalysis && (
-            <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
-              <div className="flex items-center gap-2 mb-4 sm:mb-6">
-                <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
-                <h2 className="text-base sm:text-lg font-semibold text-foreground">Match Analysis</h2>
+            <div className="bg-card rounded-xl shadow-sm p-5 border border-border">
+              <div className="flex items-center gap-2 mb-5">
+                <Sparkles className="w-5 h-5 text-primary flex-shrink-0" />
+                <h2 className="text-base font-semibold text-foreground">Match Analysis</h2>
               </div>
 
-              <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-primary/5">
-                <p className="text-foreground text-sm sm:text-base">{matchAnalysis.summary}</p>
+              <div className="mb-5 p-4 rounded-xl bg-primary/5">
+                <p className="text-foreground text-sm break-words">{matchAnalysis.summary}</p>
               </div>
 
-              <div className="space-y-4 sm:space-y-6">
+              <div className="space-y-5">
                 {matchAnalysis.strengths && matchAnalysis.strengths.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                      <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                      <h3 className="font-semibold text-foreground text-sm sm:text-base">Strengths</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <h3 className="font-semibold text-foreground text-sm">Strengths</h3>
                     </div>
-                    <ul className="space-y-1 sm:space-y-2">
+                    <ul className="space-y-1.5">
                       {matchAnalysis.strengths.map((strength: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <li key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
                           <span className="text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0">•</span>
-                          <span>{strength}</span>
+                          <span className="break-words">{strength}</span>
                         </li>
                       ))}
                     </ul>
@@ -295,15 +305,15 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
 
                 {matchAnalysis.concerns && matchAnalysis.concerns.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                      <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                      <h3 className="font-semibold text-foreground text-sm sm:text-base">Concerns</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                      <h3 className="font-semibold text-foreground text-sm">Concerns</h3>
                     </div>
-                    <ul className="space-y-1 sm:space-y-2">
+                    <ul className="space-y-1.5">
                       {matchAnalysis.concerns.map((concern: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <li key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
                           <span className="text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0">•</span>
-                          <span>{concern}</span>
+                          <span className="break-words">{concern}</span>
                         </li>
                       ))}
                     </ul>
@@ -312,15 +322,15 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
 
                 {matchAnalysis.recommendations && matchAnalysis.recommendations.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                      <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                      <h3 className="font-semibold text-foreground text-sm sm:text-base">Recommendations</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                      <h3 className="font-semibold text-foreground text-sm">Recommendations</h3>
                     </div>
-                    <ul className="space-y-1 sm:space-y-2">
+                    <ul className="space-y-1.5">
                       {matchAnalysis.recommendations.map((rec: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <li key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
                           <span className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0">•</span>
-                          <span>{rec}</span>
+                          <span className="break-words">{rec}</span>
                         </li>
                       ))}
                     </ul>
@@ -333,32 +343,32 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           {/* Company Info Card */}
           {application.company && (
             <Link href={`/dashboard/companies/${application.company.slug}`}>
-              <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border hover:border-primary transition-colors cursor-pointer">
-                <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                  <Building2 className="w-4 sm:w-5 h-4 sm:h-5 text-muted-foreground flex-shrink-0" />
-                  <h2 className="text-base sm:text-lg font-semibold text-foreground">Company Information</h2>
-                  <ExternalLink className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-muted-foreground ml-auto flex-shrink-0" />
+              <div className="bg-card rounded-xl shadow-sm p-5 border border-border hover:border-primary transition-colors cursor-pointer">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <h2 className="text-base font-semibold text-foreground">Company Information</h2>
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground ml-auto flex-shrink-0" />
                 </div>
 
                 {application.company.description && (
-                  <p className="text-muted-foreground mb-3 sm:mb-4 line-clamp-3 text-sm sm:text-base">
+                  <p className="text-muted-foreground mb-3 line-clamp-3 text-sm break-words">
                     {application.company.description}
                   </p>
                 )}
 
-                <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm">
+                <div className="flex flex-wrap gap-2 text-xs">
                   {application.company.industry && (
-                    <span className="px-2 sm:px-3 py-1 bg-muted text-foreground rounded-full">
+                    <span className="px-2.5 py-1 bg-muted text-foreground rounded-full">
                       {application.company.industry}
                     </span>
                   )}
                   {application.company.company_size && (
-                    <span className="px-2 sm:px-3 py-1 bg-muted text-foreground rounded-full">
+                    <span className="px-2.5 py-1 bg-muted text-foreground rounded-full">
                       {application.company.company_size}
                     </span>
                   )}
                   {application.company.overall_rating !== null && (
-                    <span className="px-2 sm:px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full font-medium">
+                    <span className="px-2.5 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full font-medium">
                       ★ {application.company.overall_rating.toFixed(1)}
                     </span>
                   )}
@@ -369,9 +379,9 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
 
           {/* Job Description */}
           {application.job_description && (
-            <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Job Description</h2>
-              <div className="max-w-none text-sm sm:text-base">
+            <div className="bg-card rounded-xl shadow-sm p-5 border border-border overflow-hidden">
+              <h2 className="text-base font-semibold text-foreground mb-3">Job Description</h2>
+              <div className="max-w-full overflow-hidden">
                 {formatJobDescription(application.job_description)}
               </div>
             </div>
@@ -379,21 +389,21 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
 
           {/* Notes */}
           {application.notes && (
-            <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Notes</h2>
-              <p className="text-muted-foreground whitespace-pre-wrap text-sm sm:text-base">{application.notes}</p>
+            <div className="bg-card rounded-xl shadow-sm p-5 border border-border">
+              <h2 className="text-base font-semibold text-foreground mb-3">Notes</h2>
+              <p className="text-muted-foreground whitespace-pre-wrap text-sm break-words">{application.notes}</p>
             </div>
           )}
 
           {/* Job URL */}
           {application.job_url && (
-            <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Original Posting</h2>
+            <div className="bg-card rounded-xl shadow-sm p-5 border border-border">
+              <h2 className="text-base font-semibold text-foreground mb-3">Original Posting</h2>
               <a
                 href={application.job_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity text-sm sm:text-base"
+                className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity text-sm min-w-0"
               >
                 <ExternalLink className="w-4 h-4 flex-shrink-0" />
                 <span className="truncate">{application.job_url}</span>
@@ -403,18 +413,18 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-5 min-w-0">
           {/* Match Score */}
           {application.match_score !== null && (
-            <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
-              <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 sm:mb-3">Match Score</h3>
+            <div className="bg-card rounded-xl shadow-sm p-5 border border-border">
+              <h3 className="text-xs font-medium text-muted-foreground mb-3">Match Score</h3>
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 sm:w-24 sm:h-24 rounded-full mb-2 sm:mb-3 bg-primary/10">
-                  <span className={`text-2xl sm:text-4xl font-bold ${getScoreColor(application.match_score)}`}>
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-2 bg-primary/10">
+                  <span className={`text-3xl font-bold ${getScoreColor(application.match_score)}`}>
                     {application.match_score}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-foreground mb-0.5 sm:mb-1">
+                <p className="text-sm font-medium text-foreground mb-0.5">
                   {getScoreLabel(application.match_score)}
                 </p>
                 <p className="text-xs text-muted-foreground">Based on your preferences</p>
@@ -423,41 +433,41 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           )}
 
           {/* Quick Actions */}
-          <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
-            <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 sm:mb-4">Quick Actions</h3>
-            <div className="space-y-1.5 sm:space-y-2">
+          <div className="bg-card rounded-xl shadow-sm p-5 border border-border">
+            <h3 className="text-xs font-medium text-muted-foreground mb-3">Quick Actions</h3>
+            <div className="space-y-2">
               <Button
                 variant="outline"
-                className="w-full justify-start rounded-lg sm:rounded-xl text-sm"
+                className="w-full justify-start rounded-xl text-sm"
                 onClick={() => router.push(`/dashboard/applications/${application.id}/edit`)}
               >
-                <Edit className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-2" />
-                Edit Details
+                <Edit className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Edit Details</span>
               </Button>
 
               {application.status === 'interviewing' && application.interview_prep_enabled && (
                 <Link href={`/dashboard/applications/${application.id}/interview-prep`} className="block">
-                  <Button variant="outline" className="w-full justify-start rounded-lg sm:rounded-xl text-sm">
-                    <FileText className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-2" />
-                    Interview Prep
+                  <Button variant="outline" className="w-full justify-start rounded-xl text-sm">
+                    <FileText className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">Interview Prep</span>
                   </Button>
                 </Link>
               )}
 
               {application.company && (
                 <Link href={`/dashboard/companies/${application.company.slug}`} className="block">
-                  <Button variant="outline" className="w-full justify-start rounded-lg sm:rounded-xl text-sm">
-                    <Building2 className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-2" />
-                    Company Info
+                  <Button variant="outline" className="w-full justify-start rounded-xl text-sm">
+                    <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">Company Info</span>
                   </Button>
                 </Link>
               )}
 
               {application.job_url && (
                 <a href={application.job_url} target="_blank" rel="noopener noreferrer" className="block">
-                  <Button variant="outline" className="w-full justify-start rounded-lg sm:rounded-xl text-sm">
-                    <ExternalLink className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-2" />
-                    View Job Posting
+                  <Button variant="outline" className="w-full justify-start rounded-xl text-sm">
+                    <ExternalLink className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">View Job Posting</span>
                   </Button>
                 </a>
               )}
@@ -465,23 +475,23 @@ export default function ApplicationDetail({ application }: ApplicationDetailProp
           </div>
 
           {/* Timeline */}
-          <div className="bg-card rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
-            <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 sm:mb-4">Timeline</h3>
-            <div className="space-y-3 sm:space-y-4">
+          <div className="bg-card rounded-xl shadow-sm p-5 border border-border">
+            <h3 className="text-xs font-medium text-muted-foreground mb-3">Timeline</h3>
+            <div className="space-y-3">
               {application.created_at && (
-                <div className="flex gap-2 sm:gap-3">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary mt-1.5 sm:mt-2 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Added to TrailAm</p>
+                <div className="flex gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground break-words">Added to TrailAm</p>
                     <p className="text-xs text-muted-foreground">{formatDate(application.created_at)}</p>
                   </div>
                 </div>
               )}
               {application.applied_date && (
-                <div className="flex gap-2 sm:gap-3">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary mt-1.5 sm:mt-2 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Applied</p>
+                <div className="flex gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground break-words">Applied</p>
                     <p className="text-xs text-muted-foreground">{formatDate(application.applied_date)}</p>
                   </div>
                 </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Loader2, CheckCircle } from 'lucide-react'
+import { Loader2, CheckCircle, Upload, X, FileText, Briefcase, Award, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { Profile } from '@/lib/supabase/types'
@@ -75,10 +75,28 @@ const MANAGEMENT_STYLES = [
   { id: 'results-oriented', label: 'Results-Oriented', description: 'Focus on outcomes' },
 ]
 
+const EXPERIENCE_LEVELS = [
+  { id: '0-2', label: '0-2 years', description: 'Entry Level' },
+  { id: '3-5', label: '3-5 years', description: 'Mid Level' },
+  { id: '6-10', label: '6-10 years', description: 'Senior Level' },
+  { id: '10+', label: '10+ years', description: 'Expert Level' },
+]
+
 export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const [uploadingResume, setUploadingResume] = useState(false)
 
+  // Professional Profile
+  const [currentJobTitle, setCurrentJobTitle] = useState(profile?.current_job_title || '')
+  const [experienceLevel, setExperienceLevel] = useState(profile?.experience_level || '')
+  const [skills, setSkills] = useState<string[]>(profile?.skills || [])
+  const [newSkill, setNewSkill] = useState('')
+  const [resumes, setResumes] = useState<Array<{url: string, fileName: string, isPrimary: boolean}>>(
+    profile?.resumes || []
+  )
+
+  // Existing preferences
   const [selectedValues, setSelectedValues] = useState<string[]>(
     (profile?.top_values as string[]) || []
   )
@@ -96,6 +114,101 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
   const [shortTermGoal, setShortTermGoal] = useState(profile?.short_term_goal || '')
   const [longTermGoal, setLongTermGoal] = useState(profile?.long_term_goal || '')
   const [careerGoals, setCareerGoals] = useState(profile?.career_goals || '')
+
+  const addSkill = () => {
+    const trimmedSkill = newSkill.trim()
+    if (trimmedSkill && !skills.includes(trimmedSkill)) {
+      setSkills([...skills, trimmedSkill])
+      setNewSkill('')
+    }
+  }
+
+  const removeSkill = (skillToRemove: string) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove))
+  }
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a PDF or Word document')
+      return
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB')
+      return
+    }
+
+    setUploadingResume(true)
+
+    try {
+      // Upload new resume
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('resumes')
+        .getPublicUrl(filePath)
+
+      const newResume = {
+        url: data.publicUrl,
+        fileName: file.name,
+        isPrimary: resumes.length === 0 // First resume is primary by default
+      }
+
+      setResumes([...resumes, newResume])
+      toast.success('Resume uploaded successfully!')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to upload resume')
+    } finally {
+      setUploadingResume(false)
+    }
+  }
+
+  const handleDeleteResume = async (indexToDelete: number) => {
+    const resumeToDelete = resumes[indexToDelete]
+    if (!resumeToDelete) return
+
+    try {
+      const path = resumeToDelete.url.split('/').pop()
+      if (path) {
+        await supabase.storage.from('resumes').remove([`${user.id}/${path}`])
+      }
+      
+      const updatedResumes = resumes.filter((_, index) => index !== indexToDelete)
+      
+      // If we deleted the primary resume and there are others, make the first one primary
+      if (resumeToDelete.isPrimary && updatedResumes.length > 0) {
+        updatedResumes[0].isPrimary = true
+      }
+      
+      setResumes(updatedResumes)
+      toast.success('Resume deleted')
+    } catch (err: any) {
+      toast.error('Failed to delete resume')
+    }
+  }
+
+  const handleSetPrimaryResume = (index: number) => {
+    const updatedResumes = resumes.map((resume, i) => ({
+      ...resume,
+      isPrimary: i === index
+    }))
+    setResumes(updatedResumes)
+  }
 
   const toggleValue = (valueId: string) => {
     if (selectedValues.includes(valueId)) {
@@ -138,6 +251,12 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
       const { error } = await supabase
         .from('profiles')
         .update({
+          // Professional Profile
+          current_job_title: currentJobTitle,
+          experience_level: experienceLevel,
+          skills: skills,
+          resumes: resumes,
+          // Preferences
           top_values: selectedValues,
           deal_breakers: selectedDealBreakers,
           work_location_preference: workLocation,
@@ -151,9 +270,9 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
         .eq('id', user.id)
 
       if (error) throw error
-      toast.success('Preferences updated successfully!')
+      toast.success('Profile updated successfully!')
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update preferences')
+      toast.error(err.message || 'Failed to update profile')
     } finally {
       setLoading(false)
     }
@@ -161,6 +280,223 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
+      {/* Professional Profile Section */}
+      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground mb-1">Professional Profile</h2>
+        <p className="text-sm text-muted-foreground mb-5">
+          Help us understand your background for better job matching
+        </p>
+
+        <div className="space-y-5">
+          {/* Current Job Title */}
+          <div>
+            <label htmlFor="job-title" className="block text-sm font-medium text-foreground mb-2">
+              Current Job Title
+            </label>
+            <input
+              id="job-title"
+              type="text"
+              value={currentJobTitle}
+              onChange={(e) => setCurrentJobTitle(e.target.value)}
+              placeholder="e.g., Senior Software Engineer"
+              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+
+          {/* Experience Level */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Experience Level
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+              {EXPERIENCE_LEVELS.map((level) => (
+                <button
+                  key={level.id}
+                  type="button"
+                  onClick={() => setExperienceLevel(level.id)}
+                  className={`
+                    p-3 rounded-lg border-2 text-center transition-all duration-200
+                    ${experienceLevel === level.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border/50 hover:border-primary/40 hover:bg-muted/50'
+                    }
+                  `}
+                >
+                  <div className="font-medium text-sm text-foreground mb-0.5">{level.label}</div>
+                  <div className="text-xs text-muted-foreground">{level.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Skills */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Skills & Technologies
+            </label>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                placeholder="Add a skill (e.g., React, Python, Project Management)"
+                className="flex-1 px-3 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+              <Button
+                type="button"
+                onClick={addSkill}
+                variant="outline"
+                className="px-4"
+              >
+                Add
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {skills.map((skill) => (
+                <span
+                  key={skill}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium"
+                >
+                  {skill}
+                  <button
+                    onClick={() => removeSkill(skill)}
+                    className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+              {skills.length === 0 && (
+                <p className="text-sm text-muted-foreground italic">No skills added yet</p>
+              )}
+            </div>
+          </div>
+
+          {/* Resume Upload */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Resume / CV Library
+            </label>
+            <p className="text-xs text-muted-foreground mb-3">
+              Upload multiple resumes for different positions (PDF or Word, max 5MB each)
+            </p>
+            
+            {/* Uploaded Resumes Grid */}
+            {resumes.length > 0 && (
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                {resumes.map((resume, index) => (
+                  <div key={index} className="relative group">
+                    <div className="relative bg-gradient-to-br from-muted/30 to-muted/20 rounded-xl border-2 border-border hover:border-primary/40 transition-all overflow-hidden">
+                      {/* Preview Section - Half Page Effect */}
+                      <div className="relative h-64 overflow-hidden bg-white dark:bg-gray-900">
+                        {resume.fileName?.toLowerCase().endsWith('.pdf') ? (
+                          <div className="absolute inset-0">
+                            <iframe
+                              src={`${resume.url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                              className="absolute top-0 left-0 w-full h-[200%] border-0"
+                              style={{
+                                transform: 'scale(1)',
+                                transformOrigin: 'top left'
+                              }}
+                              title={`Resume Preview ${index + 1}`}
+                            />
+                            {/* Bottom fade effect - simulates paper being pulled under */}
+                            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-muted via-muted/80 to-transparent pointer-events-none" />
+                          </div>
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 flex flex-col items-center justify-center">
+                            <FileText className="w-16 h-16 text-blue-600 dark:text-blue-400 mb-2" />
+                            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Word Document</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info Section */}
+                      <div className="p-4 bg-card border-t border-border">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate mb-1">
+                              {resume.fileName}
+                            </p>
+                            {resume.isPrimary && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                                <CheckCircle className="w-3 h-3" />
+                                Primary
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => handleDeleteResume(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 h-8 w-8 p-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={resume.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Full
+                          </a>
+                          {!resume.isPrimary && (
+                            <>
+                              <span className="text-muted-foreground">•</span>
+                              <button
+                                type="button"
+                                onClick={() => handleSetPrimaryResume(index)}
+                                className="text-xs text-muted-foreground hover:text-foreground font-medium"
+                              >
+                                Set as Primary
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload New Resume */}
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors bg-muted/20">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                {uploadingResume ? (
+                  <>
+                    <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-foreground font-medium">
+                      {resumes.length > 0 ? 'Add Another Resume' : 'Click to upload resume'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">PDF or Word (max 5MB)</p>
+                  </>
+                )}
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.doc,.docx"
+                onChange={handleResumeUpload}
+                disabled={uploadingResume}
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+
       {/* Career Goals Section */}
       <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
         <h2 className="text-lg font-semibold text-foreground mb-1">Career Goals</h2>
@@ -251,11 +587,7 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
                     </p>
                   </div>
                   {isSelected && (
-                    <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-2.5 h-2.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
+                    <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
                   )}
                 </div>
               </button>
@@ -298,11 +630,7 @@ export default function PreferencesTab({ profile, user }: PreferencesTabProps) {
                     </p>
                   </div>
                   {isSelected && (
-                    <div className="w-4 h-4 rounded-full bg-destructive flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-2.5 h-2.5 text-destructive-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
+                    <X className="w-4 h-4 text-destructive flex-shrink-0" />
                   )}
                 </div>
               </button>
