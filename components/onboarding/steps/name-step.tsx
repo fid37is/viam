@@ -34,7 +34,7 @@ export default function NameStep({ userName, onUserNameChange }: NameStepProps) 
           autoFocus
           onKeyDown={(e) => e.key === 'Enter' && userName.trim().length > 0 && e.currentTarget.form?.requestSubmit()}
         />
-        <p className="text-xs sm:text-xs text-white font-medium">
+        <p className="text-xs sm:text-xs text-muted-foreground font-medium">
           {userName.trim().length === 0 ? 'Please enter your name to continue' : '✓ Ready to continue'}
         </p>
       </div>
