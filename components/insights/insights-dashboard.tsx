@@ -2,7 +2,7 @@
 
 import { Application } from '@/lib/supabase/types'
 import { TrendingUp, TrendingDown, Target, Clock, Award, Sparkles, X, Loader2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, JSX } from 'react'
 import { Button } from '@/components/ui/button'
 
 interface InsightsDashboardProps {
@@ -108,6 +108,93 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
     return () => window.removeEventListener('openAIInsights', handleOpenInsights)
   }, [])
 
+  // Function to format AI insights text
+  const formatInsights = (text: string) => {
+    // Pre-process: Split inline titles from paragraphs
+    const processed = text
+      .replace(/([.!?])([A-Z][a-z]+ [A-Z][a-z]+:)/g, '$1\n\n$2')
+      .replace(/([.!?])(\*\*[A-Z][^*]+\*\*:)/g, '$1\n\n$2')
+
+    const lines = processed.split('\n')
+    const elements: JSX.Element[] = []
+
+    lines.forEach((line, index) => {
+      const trimmed = line.trim()
+
+      // Skip empty lines
+      if (!trimmed) {
+        elements.push(<div key={`empty-${index}`} className="h-2" />)
+        return
+      }
+
+      // Section headers with dividers (━━━)
+      if (line.startsWith('━━━')) {
+        const title = line.replace(/━━━/g, '').trim()
+        elements.push(
+          <div key={`divider-${index}`} className="pt-6 first:pt-0">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+              <h3 className="text-xs sm:text-base font-semibold text-primary uppercase tracking-wide whitespace-nowrap">
+                {title}
+              </h3>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+            </div>
+          </div>
+        )
+        return
+      }
+
+      // Section titles (ending with :)
+      if (trimmed.endsWith(':') && 
+          trimmed.length < 80 && 
+          !trimmed.startsWith('•') &&
+          !trimmed.startsWith('-') &&
+          !trimmed.match(/^\d+\./)) {
+        const title = trimmed.replace(/^\*\*(.*?)\*\*$/, '$1').replace(/:$/, '')
+        elements.push(
+          <h4 key={`title-${index}`} className="text-sm sm:text-base font-bold text-foreground mt-6 mb-3 first:mt-0">
+            {title}
+          </h4>
+        )
+        return
+      }
+
+      // Numbered lists
+      if (trimmed.match(/^\d+\.\s/)) {
+        const number = trimmed.match(/^\d+\./)?.[0] || ''
+        const content = trimmed.replace(/^\d+\.\s*/, '')
+        elements.push(
+          <div key={`num-${index}`} className="flex gap-2 sm:gap-3 text-foreground/90 leading-relaxed pl-2">
+            <span className="text-primary font-semibold flex-shrink-0">{number}</span>
+            <span className="flex-1 text-sm sm:text-base">{content}</span>
+          </div>
+        )
+        return
+      }
+
+      // Bullet points
+      if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
+        const content = trimmed.replace(/^[•\-]\s*/, '')
+        elements.push(
+          <div key={`bullet-${index}`} className="flex gap-2 sm:gap-3 text-foreground/90 leading-relaxed pl-2">
+            <span className="text-primary mt-1 flex-shrink-0">•</span>
+            <span className="flex-1 text-sm sm:text-base">{content}</span>
+          </div>
+        )
+        return
+      }
+
+      // Regular paragraphs
+      elements.push(
+        <p key={`p-${index}`} className="text-foreground/90 leading-relaxed text-sm sm:text-base">
+          {line}
+        </p>
+      )
+    })
+
+    return elements
+  }
+
   return (
     <div className="space-y-6">
       {/* AI Insights Modal */}
@@ -146,45 +233,7 @@ function InsightsDashboard({ applications }: InsightsDashboardProps) {
                 </div>
               ) : aiInsights ? (
                 <div className="space-y-4">
-                  {aiInsights.split('\n').map((line, index) => {
-                    // Section headers with dividers
-                    if (line.startsWith('━━━')) {
-                      const title = line.replace(/━━━/g, '').trim()
-                      return (
-                        <div key={index} className="pt-6 first:pt-0">
-                          <div className="flex items-center gap-2 sm:gap-3 mb-4">
-                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-                            <h3 className="text-xs sm:text-base font-semibold text-primary uppercase tracking-wide whitespace-nowrap">
-                              {title}
-                            </h3>
-                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-                          </div>
-                        </div>
-                      )
-                    }
-                    
-                    // Bullet points
-                    if (line.trim().startsWith('•')) {
-                      return (
-                        <div key={index} className="flex gap-2 sm:gap-3 text-foreground/90 leading-relaxed pl-2">
-                          <span className="text-primary mt-1 flex-shrink-0">•</span>
-                          <span className="flex-1 text-sm sm:text-base">{line.replace(/^\s*•\s*/, '')}</span>
-                        </div>
-                      )
-                    }
-                    
-                    // Empty lines for spacing
-                    if (line.trim() === '') {
-                      return <div key={index} className="h-2"></div>
-                    }
-                    
-                    // Regular paragraphs
-                    return (
-                      <p key={index} className="text-foreground/90 leading-relaxed text-sm sm:text-base">
-                        {line}
-                      </p>
-                    )
-                  })}
+                  {formatInsights(aiInsights)}
                 </div>
               ) : null}
             </div>

@@ -47,6 +47,24 @@ export type UserAnswer = {
   timeSpent: number
 }
 
+// NEW: Match Analysis Type
+export type MatchAnalysis = {
+  match_score: number
+  category_scores: {
+    values_alignment: number
+    culture_fit: number
+    growth_opportunity: number
+    practical_fit: number
+    qualification_match: number
+  }
+  strengths: string[]
+  concerns: string[]
+  recommendations: string[]
+  interview_question: string
+  summary: string
+  qualification_assessment: string
+}
+
 export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
@@ -413,7 +431,18 @@ export type Database = {
           account_status: 'active' | 'hibernated' | 'deleted'
           deletion_scheduled_at: string | null
           subscription_tier: string | null
-          is_admin: boolean | null 
+          is_admin: boolean | null
+          // NEW FIELDS
+          current_job_title: string | null
+          experience_level: string | null
+          skills: string[] | null
+          resume_url: string | null
+          resume_file_name: string | null
+          resumes: {
+            url: string;
+            fileName: string;
+            isPrimary: boolean;
+          }[]
         }
         Insert: {
           career_goals?: string | null
@@ -435,6 +464,12 @@ export type Database = {
           account_status?: 'active' | 'hibernated' | 'deleted'
           deletion_scheduled_at?: string | null
           is_admin?: boolean | null
+          // NEW FIELDS
+          current_job_title?: string | null
+          experience_level?: string | null
+          skills?: string[] | null
+          resume_url?: string | null
+          resume_file_name?: string | null
         }
         Update: {
           career_goals?: string | null
@@ -455,7 +490,13 @@ export type Database = {
           work_location_preference?: string | null
           account_status?: 'active' | 'hibernated' | 'deleted'
           deletion_scheduled_at?: string | null
-          is_admin?: boolean | null 
+          is_admin?: boolean | null
+          // NEW FIELDS
+          current_job_title?: string | null
+          experience_level?: string | null
+          skills?: string[] | null
+          resume_url?: string | null
+          resume_file_name?: string | null
         }
         Relationships: []
       }
