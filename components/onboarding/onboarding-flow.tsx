@@ -263,7 +263,7 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
                   <Button
                     onClick={handleNext}
                     disabled={!canProceed() || loading}
-                    className="flex-1 h-9 sm:h-10 md:h-12 text-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm md:text-base"
+                    className="flex-1 h-9 sm:h-10 md:h-12 text-white font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm md:text-base"
                     style={{ backgroundColor: 'hsl(var(--primary))' }}
                   >
                     {loading ? (
@@ -282,7 +282,7 @@ export default function OnboardingFlow({ user, verified = false }: OnboardingFlo
                 <Button
                   onClick={handleNext}
                   disabled={!canProceed() || loading}
-                  className="w-full h-9 sm:h-10 md:h-12 text-foreground font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm md:text-base"
+                  className="w-full h-9 sm:h-10 md:h-12 text-white font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm md:text-base"
                   style={{ backgroundColor: 'hsl(var(--primary))' }}
                 >
                   {loading ? (

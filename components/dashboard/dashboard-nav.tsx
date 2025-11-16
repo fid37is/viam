@@ -13,10 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, Briefcase, TrendingUp, Settings, LogOut, Moon, Sun, Building2, User, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Briefcase, TrendingUp, Settings, LogOut, Moon, Sun, Building2, User, Menu, X, Sparkles, XCircle } from 'lucide-react'
 import { useTheme } from '@/components/providers/theme-provider'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface DashboardNavProps {
   user: SupabaseUser
@@ -28,6 +28,41 @@ export default function DashboardNav({ user }: DashboardNavProps) {
   const supabase = createClient()
   const { theme, toggleTheme } = useTheme()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showProfileHint, setShowProfileHint] = useState(false)
+  const [isNewUser, setIsNewUser] = useState(false)
+
+  // Check if user is new and needs to complete profile
+  useEffect(() => {
+    const checkProfileCompletion = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('created_at, profile_completed')
+          .eq('id', user.id)
+          .single()
+
+        if (profile && profile.created_at) {
+          const accountAge = new Date().getTime() - new Date(profile.created_at).getTime()
+          const isWithin24Hours = accountAge < 24 * 60 * 60 * 1000 // 24 hours
+
+          // Show hint if:
+          // 1. Account is less than 24 hours old
+          // 2. Profile not marked as completed
+          // 3. User hasn't dismissed the hint before (check localStorage)
+          const hintDismissed = localStorage.getItem(`profile-hint-dismissed-${user.id}`)
+          
+          if (isWithin24Hours && !profile.profile_completed && !hintDismissed) {
+            setIsNewUser(true)
+            setShowProfileHint(true)
+          }
+        }
+      } catch (error) {
+        console.error('Error checking profile completion:', error)
+      }
+    }
+
+    checkProfileCompletion()
+  }, [user.id, supabase])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -41,6 +76,16 @@ export default function DashboardNav({ user }: DashboardNavProps) {
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false)
+  }
+
+  const dismissProfileHint = () => {
+    setShowProfileHint(false)
+    localStorage.setItem(`profile-hint-dismissed-${user.id}`, 'true')
+  }
+
+  const handleProfileClick = () => {
+    dismissProfileHint()
+    router.push('/dashboard/profile')
   }
 
   const navItems = [
@@ -124,36 +169,86 @@ export default function DashboardNav({ user }: DashboardNavProps) {
               )}
             </button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                  <User className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">My Account</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+            {/* Profile Dropdown with Hint */}
+            <div className="relative">
+              {/* Profile Completion Hint Callout */}
+              {showProfileHint && (
+                <div className="absolute right-0 top-12 w-72 sm:w-80 bg-white dark:bg-gray-950 border-2 border-primary/30 rounded-lg shadow-xl p-4 z-[60] animate-in slide-in-from-top-5 pointer-events-auto">
+                  <button
+                    onClick={dismissProfileHint}
+                    className="absolute top-2 right-2 p-1 hover:bg-primary/10 rounded-full transition-colors z-[61]"
+                    aria-label="Close hint"
+                  >
+                    <XCircle className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                  
+                  <div className="flex items-start space-x-3 relative z-[61]">
+                    <div className="flex-shrink-0 mt-1">
+                      <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-foreground mb-1">
+                        Complete Your Profile
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Add your preferences for better job recommendations and personalized analysis!
+                      </p>
+                    </div>
                   </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/profile" className="flex items-center cursor-pointer">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="text-destructive focus:text-destructive cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+                  {/* Arrow pointer */}
+                  <div className="absolute -top-2 right-6 w-4 h-4 bg-white dark:bg-gray-950 border-l-2 border-t-2 border-primary/30 rotate-45 z-[59]"></div>
+                </div>
+              )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`flex items-center space-x-2 relative ${showProfileHint ? 'ring-2 ring-primary ring-offset-2 animate-pulse' : ''}`}
+                  >
+                    <User className="w-4 h-4" />
+                    {isNewUser && showProfileHint && (
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping"></span>
+                    )}
+                    {isNewUser && showProfileHint && (
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"></span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">My Account</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link 
+                      href="/dashboard/profile" 
+                      className="flex items-center cursor-pointer"
+                      onClick={dismissProfileHint}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Profile
+                      {isNewUser && showProfileHint && (
+                        <Sparkles className="w-3 h-3 ml-auto text-primary" />
+                      )}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-destructive focus:text-destructive cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
             {/* Mobile Menu Toggle */}
             <button
@@ -201,6 +296,40 @@ export default function DashboardNav({ user }: DashboardNavProps) {
             )
           })}
         </div>
+
+        {/* Mobile Profile Hint Banner */}
+        {showProfileHint && (
+          <div className="mx-2 mb-3 p-3 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-semibold text-foreground mb-1">
+                  Complete Your Profile
+                </h4>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Add your preferences for better job recommendations!
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleProfileClick}
+                    size="sm"
+                    className="flex-1 text-xs"
+                  >
+                    Go to Profile
+                  </Button>
+                  <Button
+                    onClick={dismissProfileHint}
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs"
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   )
